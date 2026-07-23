@@ -1,6 +1,6 @@
 # Universal Wallet & Rewards — Project Progress
 
-_Last updated: Step 2A — Backend Foundation_
+_Last updated: Step 3 — Frontend Integration_
 
 This document tracks what has been built, what remains, and the assumptions
 made along the way. It is meant to be updated at the end of every step.
@@ -226,29 +226,141 @@ and `Branch.is_main` → `boolean`.
 
 ---
 
-## 4. Remaining Work
+## 4. Step 2B — REST API (completed)
 
-- **Step 2B (assumed next):** Controllers, API routes, API Resources/policies
-  wiring the Form Requests already built to real HTTP endpoints; Sanctum
-  token issuance.
-- **Google OAuth (Socialite)** — explicitly out of scope for this step. The
-  `users` table is shaped to receive it (`google_id`, `avatar`, nullable
-  `password`) but no auth flow exists yet.
-- **File storage** for `logo_path` / `photo_path` (local disk vs. DigitalOcean
-  Spaces per the SDA's physical view) — not configured yet.
-- **QR code generation/validation logic** for `reward_redemptions.code` (the
-  timed-claim flow) — schema exists, no service logic yet.
-- **Business logic for balance mutation** (incrementing/decrementing
-  `customer_loyalty` when a `customer_activities` row is written) — currently
-  seeded data has consistent balances, but nothing enforces that consistency
-  automatically yet (no model observers/events).
-- Frontend (Step 1) still runs entirely on its own placeholder data in
-  `resources/js/data/mock.js` — it has not been connected to this backend.
-- No automated tests written yet for models/factories/constraints.
+38 endpoints across `/api/customer/*`, `/api/vendor/*`, `/api/admin/*`, all
+behind `auth:sanctum` + a `role:` middleware, plus a shared `/api/me`
+bootstrap endpoint. Highlights:
+
+- **18 controllers**, thin, delegating to services.
+- **8 API Resources**, viewer-aware (e.g. a vendor's `review_note` is only
+  visible to that vendor or an admin).
+- **4 Policies** (Vendor, Branch, Promotion, Customer) for per-record
+  ownership checks, auto-discovered by Laravel's naming convention.
+- **`LoyaltyService`** — every points/stamps mutation
+  (`addStamps`/`addPoints`/`deductPoints`/`claimStampReward`/`redeemCode`)
+  runs inside `DB::transaction()` with `lockForUpdate()` on the
+  `customer_loyalty` row, so concurrent scans can't corrupt a balance.
+- **`VendorReviewService`** — approve/reject/suspend/reinstate state
+  transitions.
+- **63 tests, all passing**, run against a real Postgres test database
+  (`wallet_rewards_test`), not SQLite — specifically so the two partial
+  unique indexes from Step 2A get exercised for real.
+- Two real bugs the test suite caught and fixed: Eloquent not reflecting a
+  Postgres column default back into the in-memory model after `create()`
+  (made a fresh promotion look "deactivated" until reloaded), and a
+  `redeemCode()` early-exit that tried to persist "mark this code expired"
+  *inside* the same transaction as the exception that aborts it — Postgres
+  rolled that write back too. Both fixed; see `LoyaltyService` and
+  `PromotionController@store`.
+
+## 5. Step 3 — Frontend Integration (completed)
+
+The Step 1 frontend now runs entirely on real data. `resources/js/data/mock.js`
+has been deleted — nothing imports it anymore.
+
+### Interim auth (temporary — not Google OAuth)
+Google OAuth is still out of scope, but the API requires a real Sanctum
+session. Added `POST /api/auth/dev-login` (`app/Http/Controllers/Api/Auth/DevLoginController.php`):
+looks up a seeded user **by email only, no password**, issues a real
+Sanctum token. Guarded with `abort_unless(app()->environment(['local','testing']), 404)`
+so it can never be reachable outside local dev/tests. Wired into the
+existing Login → Choose Account flow with **zero UI changes** — the account
+chooser now lists real seeded emails (`resources/js/data/demoAccounts.js`)
+and clicking one calls the real endpoint. **This must be deleted once
+Socialite login is wired up** — it is a deliberate, clearly-labeled stand-in,
+not a permanent auth path.
+
+### Frontend architecture added
+- **TanStack Query** (`@tanstack/react-query`) for all server state — no
+  component holds fetched data in local `useState` anymore.
+- `resources/js/lib/apiClient.js` — one axios instance; a request interceptor
+  attaches the bearer token and spoofs `PUT`/`PATCH` as `POST` with `_method`
+  when the body is `FormData` (Laravel can't parse multipart on PUT/PATCH);
+  every hook goes through an `api.get/post/put` wrapper that normalizes every
+  failure into `{ status, message, errors }` so error handling is identical
+  everywhere.
+- `resources/js/queries/{auth,customer,vendor,admin}.js` — one hook per
+  endpoint (~35 hooks total), each with clear cache-invalidation rules (e.g.
+  adding stamps invalidates the vendor dashboard, activity log, and
+  analytics queries at once).
+- `resources/js/context/SessionContext.jsx` — now holds a real bearer token
+  (localStorage-backed) instead of a per-role boolean flag; `RequireAuth`
+  fetches `/me` and redirects if the token is missing, invalid, or belongs
+  to the wrong role.
+- `components/ui/{LoadingState,ErrorState,QueryState}.jsx` — every
+  data-driven screen follows the same loading → error (with retry) → empty →
+  content branch via `QueryState`, so this is handled consistently rather
+  than per-page.
+- Vendor/branch "logo" placeholders now render the real uploaded image
+  (`/storage/{path}`) when present, falling back to the original
+  colored-initial circle otherwise (`components/VendorAvatar.jsx`).
+
+### Known gaps / deliberate simplifications
+- **No camera-based QR scanning.** No such library was in scope or already
+  installed, and adding one would mean new UI, which was off-limits this
+  step. The vendor Scanner screen keeps its exact original look; tapping it
+  opens a `window.prompt()` asking for the customer code a real scan would
+  have decoded, then calls the real `/vendor/scan` endpoint with it.
+- **The vendor-side "redeem a customer's reward QR" endpoint
+  (`POST /vendor/redemptions/redeem`) has no screen wired to it.** Step 1
+  never built a distinct "confirm redemption" screen — the single Scanner
+  screen's copy ("Scan Customer QR") maps to customer identification, not
+  reward redemption, so wiring the redeem endpoint in would have meant
+  inventing new UI. The endpoint is fully built and tested (Step 2B); it's
+  just not reachable from the current screens.
+- **Location screen's map pins stay decorative.** There's no map SDK in the
+  Step 1 design (just a gradient background with a few absolutely-positioned
+  dots), so real nearby-branch data feeds the "Nearby Stores" list at the
+  bottom (via the browser's real Geolocation API, falling back to a Phnom
+  Penh center point), but the pins on the fake map are not truly
+  geo-positioned.
+- **Vendor Activity date filter** only correctly filters "Today" (the API
+  takes a single exact date). "This Week" / "This Month" fall back to
+  showing everything rather than fabricating a range endpoint that wasn't
+  built.
+- Two placeholder edit actions ("Edit Profile" on the customer Profile
+  screen) use `window.prompt()` rather than a new inline form, since Step 1
+  never designed one and adding form UI was out of scope for this step.
+
+### Verification
+- Backend: full 62-test suite re-run clean after the one Step 3 backend
+  change (see below).
+- Frontend: `npm run build` succeeds; a full Playwright run drove real
+  logins (via dev-login) and real data through all three roles — including
+  the two most important write paths end-to-end through actual UI clicks:
+  a vendor adding a stamp (`10 stamps → 11 stamps`, confirmed via screenshot
+  diff) and an admin approving a pending vendor (vendor disappeared from the
+  pending list after clicking Approve). Zero console errors, zero failed
+  API requests across the whole run.
+- One small **Step 3 backend fix**: `Api\Admin\VendorController@index`/`@show`
+  weren't eager-loading the vendor's `user` relation, so the "Owner" name
+  the admin Vendor Approvals screen has always shown would have rendered
+  broken once real data replaced the mock. Fixed by adding `'user:id,name,email'`
+  to the eager-load list; re-verified against the full test suite.
 
 ---
 
-## 5. Assumptions Made
+## 6. Remaining Work
+
+- **Google OAuth (Socialite)** — still not implemented. `DevLoginController`
+  and its two routes must be deleted once it lands.
+- **Camera-based QR scanning** on the vendor Scanner screen (currently a
+  `window.prompt()` stand-in).
+- **A "confirm redemption" screen** for the vendor to consume a customer's
+  stamp-reward QR code — the backend endpoint exists and is tested, but no
+  Step 1 screen maps to it.
+- **File storage** for `logo_path` / `photo_path` — currently the local
+  `public` disk (via `php artisan storage:link`), not yet DigitalOcean Spaces
+  per the SDA's physical view.
+- Bundle size warning from Vite (~900 kB main chunk) — candidate for
+  route-based code-splitting later, not addressed this step.
+- No automated frontend tests (component/unit) — verification so far is
+  backend feature tests + manual/scripted browser smoke testing.
+
+---
+
+## 7. Assumptions Made
 
 1. **Vendor "not completed" state** is modeled as *no `vendors` row exists*
    rather than a stored status, since Step 1's mockups show it purely as a
@@ -278,3 +390,17 @@ and `Branch.is_main` → `boolean`.
 8. Seed data uses fixed demo credentials (e.g. `admin@universalwallet.test`,
    `Tou@gmail.com`) purely for local development continuity with the Step 1
    mockups — not meant to represent real accounts.
+9. **The dev-login stand-in authenticates by email with no password check.**
+   Explicitly scoped to unblock frontend integration while Google OAuth is
+   still out of scope, and hard-guarded to `local`/`testing` environments.
+   Not a security shortcut for production — it must be removed, not just
+   left disabled, once Socialite lands.
+10. **A single bearer token represents one active session.** Logging in as a
+    different role (e.g. switching from the customer app to the vendor app in
+    the same browser) replaces the stored token rather than keeping multiple
+    concurrent role sessions — this matches how a real Google-authenticated
+    session would behave and kept `SessionContext` simple.
+11. **The vendor Scanner's "tap to scan" is a `window.prompt()`, not a new
+    input field**, to satisfy "keep the current UI unchanged" literally: no
+    library exists yet to decode a real QR from the camera, and adding a
+    text-input UI would have been a UI change this step explicitly excluded.

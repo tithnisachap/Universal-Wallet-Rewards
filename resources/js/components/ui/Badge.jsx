@@ -7,6 +7,7 @@ const tones = {
     rejected: 'bg-danger-50 text-danger-500',
     scheduled: 'bg-brand-100 text-brand-600',
     expired: 'bg-gray-200 text-gray-500',
+    suspended: 'bg-danger-50 text-danger-500',
     neutral: 'bg-gray-100 text-gray-600',
 };
 

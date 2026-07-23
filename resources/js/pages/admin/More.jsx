@@ -2,8 +2,7 @@ import { Users, BarChart3, History, Settings, UserCog, HelpCircle, Info, LogOut,
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Avatar from '../../components/ui/Avatar';
-import { adminUser } from '../../data/mock';
-import { useSession } from '../../context/SessionContext';
+import { useLogout, useMe } from '../../queries/auth';
 
 const management = [
     { label: 'Customers', icon: Users },
@@ -20,11 +19,13 @@ const system = [
 
 export default function More() {
     const navigate = useNavigate();
-    const { logout } = useSession();
+    const logout = useLogout();
+    const { data: me } = useMe();
 
     function handleLogout() {
-        logout('admin');
-        navigate('/admin/login');
+        logout.mutate(undefined, {
+            onSettled: () => navigate('/admin/login'),
+        });
     }
 
     return (
@@ -32,10 +33,10 @@ export default function More() {
             <h1 className="text-center text-xl font-bold text-brand-600">More</h1>
 
             <div className="mt-4 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-indigo-700 to-purple-700 p-4 text-white">
-                <Avatar size={48} />
+                <Avatar src={me?.avatar} size={48} />
                 <div className="flex-1">
-                    <p className="font-bold">{adminUser.name}</p>
-                    <p className="text-sm text-white/70">{adminUser.role}</p>
+                    <p className="font-bold">{me?.name ?? 'Admin'}</p>
+                    <p className="text-sm text-white/70">Super Administrator</p>
                 </div>
                 <ChevronRight size={18} className="text-white/70" />
             </div>
@@ -45,6 +46,7 @@ export default function More() {
 
             <button
                 onClick={handleLogout}
+                disabled={logout.isPending}
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-danger-100 bg-danger-50 py-3 text-sm font-semibold text-danger-500"
             >
                 <LogOut size={16} /> Logout

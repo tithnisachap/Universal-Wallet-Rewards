@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Store } from 'lucide-react';
 import { SegmentedControl, PillTabs } from '../../components/ui/Tabs';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
-import { vendorApprovals } from '../../data/mock';
+import QueryState from '../../components/ui/QueryState';
+import EmptyState from '../../components/ui/EmptyState';
+import VendorAvatar from '../../components/VendorAvatar';
+import { useAdminVendors, useReviewVendor } from '../../queries/admin';
 
 const statusTabs = [
-    { value: 'pending', label: `Pending (${vendorApprovals.pending.length})` },
+    { value: 'pending', label: 'Pending' },
     { value: 'approved', label: 'Approved' },
     { value: 'rejected', label: 'Rejected' },
 ];
@@ -15,6 +19,9 @@ const statusTabs = [
 export default function VendorApprovals() {
     const [topTab, setTopTab] = useState('applications');
     const [statusTab, setStatusTab] = useState('pending');
+    const status = topTab === 'history' ? 'history' : statusTab;
+
+    const { data: vendors, isLoading, isError, error, refetch } = useAdminVendors(status);
 
     return (
         <div className="px-4 py-4">
@@ -33,79 +40,129 @@ export default function VendorApprovals() {
 
             {topTab === 'applications' ? (
                 <>
-                    <PillTabs options={statusTabs} value={statusTab} onChange={setStatusTab} className="mt-4 border-b border-gray-100 pb-2" />
+                    <PillTabs
+                        options={statusTabs.map((tab) => ({
+                            ...tab,
+                            label: tab.value === 'pending' ? `Pending (${vendors?.length ?? 0})` : tab.label,
+                        }))}
+                        value={statusTab}
+                        onChange={setStatusTab}
+                        className="mt-4 border-b border-gray-100 pb-2"
+                    />
 
                     <div className="mt-4 space-y-3">
-                        {(vendorApprovals[statusTab] ?? []).map((app) => (
-                            <Link key={app.id} to={`/admin/vendors/${app.id}/review`}>
-                                <Card>
-                                    <div className="mb-2 flex items-start justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-11 w-11 shrink-0 rounded-full bg-amber-900" />
-                                            <div>
-                                                <p className="font-semibold text-gray-900">{app.name}</p>
-                                                <p className="text-sm text-gray-500">{app.category}</p>
-                                            </div>
-                                        </div>
-                                        <Badge tone={statusTab}>{statusTab}</Badge>
-                                    </div>
-                                    <dl className="space-y-1 text-sm">
-                                        <div className="flex justify-between">
-                                            <dt className="text-gray-400">Location:</dt>
-                                            <dd className="text-gray-700">{app.location}</dd>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <dt className="text-gray-400">Owner:</dt>
-                                            <dd className="text-gray-700">{app.owner}</dd>
-                                        </div>
-                                    </dl>
-                                    <p className="mt-2 text-xs text-gray-400">Submitted on {app.submitted}</p>
-
-                                    {statusTab === 'pending' ? (
-                                        <div className="mt-3 flex gap-3">
-                                            <Button variant="danger" size="sm" onClick={(e) => e.preventDefault()}>
-                                                Reject
-                                            </Button>
-                                            <Button variant="success" size="sm" onClick={(e) => e.preventDefault()}>
-                                                Approve
-                                            </Button>
-                                        </div>
-                                    ) : null}
-                                </Card>
-                            </Link>
-                        ))}
-
-                        {(vendorApprovals[statusTab] ?? []).length === 0 ? (
-                            <p className="py-8 text-center text-sm text-gray-400">No {statusTab} applications.</p>
-                        ) : null}
+                        <QueryState
+                            isLoading={isLoading}
+                            isError={isError}
+                            error={error}
+                            onRetry={refetch}
+                            isEmpty={vendors?.length === 0}
+                            emptyState={<p className="py-8 text-center text-sm text-gray-400">No {statusTab} applications.</p>}
+                        >
+                            {vendors?.map((app) => (
+                                <VendorApplicationCard key={app.id} app={app} statusTab={statusTab} />
+                            ))}
+                        </QueryState>
                     </div>
 
-                    {statusTab === 'pending' && vendorApprovals.pending.length > 0 ? (
+                    {statusTab === 'pending' && vendors?.length > 0 ? (
                         <p className="mt-4 text-center text-sm text-gray-400">
-                            Showing 1 to {vendorApprovals.pending.length} of {vendorApprovals.pending.length} results
+                            Showing 1 to {vendors.length} of {vendors.length} results
                         </p>
                     ) : null}
                 </>
             ) : (
                 <>
-                    <p className="mt-4 text-sm font-semibold text-brand-600">All ({vendorApprovals.history.length})</p>
+                    <p className="mt-4 text-sm font-semibold text-brand-600">All ({vendors?.length ?? 0})</p>
                     <div className="mt-3 space-y-3">
-                        {vendorApprovals.history.map((item) => (
-                            <Link key={item.id} to={`/admin/vendors/${item.id}/review`}>
-                                <Card className="flex items-center gap-3">
-                                    <div className="h-11 w-11 shrink-0 rounded-full bg-amber-900" />
-                                    <div className="flex-1">
-                                        <p className="font-semibold text-gray-900">{item.name}</p>
-                                        <p className="text-sm text-gray-500">{item.category}</p>
-                                        <p className="text-xs text-gray-400">{item.date}</p>
-                                    </div>
-                                    <Badge tone={item.status}>{item.status}</Badge>
-                                </Card>
-                            </Link>
-                        ))}
+                        <QueryState
+                            isLoading={isLoading}
+                            isError={isError}
+                            error={error}
+                            onRetry={refetch}
+                            isEmpty={vendors?.length === 0}
+                            emptyState={<EmptyState icon={Store} title="No history yet" description="Reviewed applications will show up here." />}
+                        >
+                            {vendors?.map((item) => (
+                                <Link key={item.id} to={`/admin/vendors/${item.id}/review`}>
+                                    <Card className="flex items-center gap-3">
+                                        <VendorAvatar vendor={item} />
+                                        <div className="flex-1">
+                                            <p className="font-semibold text-gray-900">{item.business_name}</p>
+                                            <p className="text-sm text-gray-500">{item.category}</p>
+                                            <p className="text-xs text-gray-400">
+                                                {new Date(item.submitted_at ?? item.created_at).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        <Badge tone={item.status}>{item.status}</Badge>
+                                    </Card>
+                                </Link>
+                            ))}
+                        </QueryState>
                     </div>
                 </>
             )}
         </div>
+    );
+}
+
+function VendorApplicationCard({ app, statusTab }) {
+    const reviewVendor = useReviewVendor(app.id);
+
+    function handleDecision(e, decision) {
+        e.preventDefault();
+        reviewVendor.mutate({ decision });
+    }
+
+    return (
+        <Link to={`/admin/vendors/${app.id}/review`}>
+            <Card>
+                <div className="mb-2 flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                        <VendorAvatar vendor={app} />
+                        <div>
+                            <p className="font-semibold text-gray-900">{app.business_name}</p>
+                            <p className="text-sm text-gray-500">{app.category}</p>
+                        </div>
+                    </div>
+                    <Badge tone={statusTab}>{statusTab}</Badge>
+                </div>
+                <dl className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                        <dt className="text-gray-400">Location:</dt>
+                        <dd className="text-gray-700">{app.address}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                        <dt className="text-gray-400">Owner:</dt>
+                        <dd className="text-gray-700">{app.owner?.name}</dd>
+                    </div>
+                </dl>
+                <p className="mt-2 text-xs text-gray-400">
+                    Submitted on {new Date(app.submitted_at).toLocaleString()}
+                </p>
+
+                {statusTab === 'pending' ? (
+                    <div className="mt-3 flex gap-3">
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={(e) => handleDecision(e, 'rejected')}
+                            disabled={reviewVendor.isPending}
+                        >
+                            Reject
+                        </Button>
+                        <Button
+                            variant="success"
+                            size="sm"
+                            onClick={(e) => handleDecision(e, 'approved')}
+                            disabled={reviewVendor.isPending}
+                        >
+                            Approve
+                        </Button>
+                    </div>
+                ) : null}
+                {reviewVendor.isError ? <p className="mt-2 text-sm text-danger-500">{reviewVendor.error.message}</p> : null}
+            </Card>
+        </Link>
     );
 }

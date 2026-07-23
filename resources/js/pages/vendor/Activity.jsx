@@ -1,23 +1,49 @@
-import { Calendar } from 'lucide-react';
+import { useState } from 'react';
+import { Calendar, Receipt } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Avatar from '../../components/ui/Avatar';
 import { Select } from '../../components/ui/Field';
-import { vendorActivity } from '../../data/mock';
+import QueryState from '../../components/ui/QueryState';
+import EmptyState from '../../components/ui/EmptyState';
+import { vendorActivityLine } from '../../lib/activityLabels';
+import { useVendorActivityLog } from '../../queries/vendor';
+
+const typeOptions = [
+    { value: 'all', label: 'All Types' },
+    { value: 'points_earned', label: 'Points Earned' },
+    { value: 'points_deducted', label: 'Points Deducted' },
+    { value: 'stamp_earned', label: 'Stamps Earned' },
+    { value: 'reward_redeemed', label: 'Redemptions' },
+];
+
+function todayFilter(period) {
+    if (period !== 'today') return undefined;
+    return new Date().toISOString().slice(0, 10);
+}
 
 export default function Activity() {
+    const [type, setType] = useState('all');
+    const [period, setPeriod] = useState('today');
+
+    const { data: activities, isLoading, isError, error, refetch } = useVendorActivityLog({
+        type,
+        date: todayFilter(period),
+    });
+
     return (
         <div>
             <PageHeader title="Activity" />
             <div className="px-4 py-4">
                 <div className="mb-4 flex gap-3">
-                    <Select defaultValue="all" className="flex-1">
-                        <option value="all">All Types</option>
-                        <option value="points">Points</option>
-                        <option value="stamps">Stamps</option>
-                        <option value="redeem">Redemptions</option>
+                    <Select value={type} onChange={(e) => setType(e.target.value)} className="flex-1">
+                        {typeOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </option>
+                        ))}
                     </Select>
                     <div className="relative flex-1">
-                        <Select defaultValue="today" className="pr-9">
+                        <Select value={period} onChange={(e) => setPeriod(e.target.value)} className="pr-9">
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
                             <option value="month">This Month</option>
@@ -26,28 +52,39 @@ export default function Activity() {
                     </div>
                 </div>
 
-                <div className="divide-y divide-gray-100">
-                    {vendorActivity.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3 py-3">
-                            <Avatar size={36} className={item.type === 'points_deduct' ? 'bg-danger-50 text-danger-500' : undefined} />
-                            <div className="flex-1">
-                                <p
-                                    className={`font-semibold ${
-                                        item.type === 'points_deduct'
-                                            ? 'text-danger-500'
-                                            : item.type === 'redeem'
-                                              ? 'text-amber-600'
-                                              : 'text-brand-600'
-                                    }`}
-                                >
-                                    {item.label}
-                                </p>
-                                <p className="text-sm text-gray-500">{item.name}</p>
+                <QueryState
+                    isLoading={isLoading}
+                    isError={isError}
+                    error={error}
+                    onRetry={refetch}
+                    isEmpty={activities?.length === 0}
+                    emptyState={<EmptyState icon={Receipt} title="No activity" description="Transactions will show up here as they happen." />}
+                >
+                    <div className="divide-y divide-gray-100">
+                        {activities?.map((item) => (
+                            <div key={item.id} className="flex items-center gap-3 py-3">
+                                <Avatar size={36} className={item.type === 'points_deducted' ? 'bg-danger-50 text-danger-500' : undefined} />
+                                <div className="flex-1">
+                                    <p
+                                        className={`font-semibold ${
+                                            item.type === 'points_deducted'
+                                                ? 'text-danger-500'
+                                                : item.type === 'reward_redeemed'
+                                                  ? 'text-amber-600'
+                                                  : 'text-brand-600'
+                                        }`}
+                                    >
+                                        {vendorActivityLine(item)}
+                                    </p>
+                                    <p className="text-sm text-gray-500">{item.customer_name}</p>
+                                </div>
+                                <span className="text-sm text-gray-400">
+                                    {new Date(item.occurred_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                                </span>
                             </div>
-                            <span className="text-sm text-gray-400">{item.time}</span>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                </QueryState>
             </div>
         </div>
     );

@@ -1,40 +1,27 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useState } from 'react';
+import { clearToken, getToken, setToken } from '../lib/apiClient';
 
 const SessionContext = createContext(null);
 
-const STORAGE_KEY = 'uw_mock_session';
-
-function readStoredSession() {
-    try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {};
-    } catch {
-        return {};
-    }
-}
-
 export function SessionProvider({ children }) {
-    const [sessions, setSessions] = useState(readStoredSession);
+    const [token, setTokenState] = useState(() => getToken());
 
-    const value = useMemo(
-        () => ({
-            isAuthenticated: (role) => Boolean(sessions[role]),
-            login: (role) => {
-                setSessions((prev) => {
-                    const next = { ...prev, [role]: true };
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-                    return next;
-                });
-            },
-            logout: (role) => {
-                setSessions((prev) => {
-                    const next = { ...prev, [role]: false };
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-                    return next;
-                });
-            },
-        }),
-        [sessions],
-    );
+    const login = useCallback((newToken) => {
+        setToken(newToken);
+        setTokenState(newToken);
+    }, []);
+
+    const logout = useCallback(() => {
+        clearToken();
+        setTokenState(null);
+    }, []);
+
+    const value = {
+        token,
+        isAuthenticated: Boolean(token),
+        login,
+        logout,
+    };
 
     return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

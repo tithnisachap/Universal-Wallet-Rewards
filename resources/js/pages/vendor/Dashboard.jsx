@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { QrCode, Megaphone, MapPin, BarChart3, History, ChevronDown } from 'lucide-react';
 import Avatar from '../../components/ui/Avatar';
 import Button from '../../components/ui/Button';
-import { vendorProfile, vendorBranches, vendorTodayOverview } from '../../data/mock';
+import QueryState from '../../components/ui/QueryState';
+import { useVendorBranches, useVendorDashboard, useVendorProfile } from '../../queries/vendor';
 
 const quickActions = [
     { to: '/vendor/scanner', label: 'Scan QR', icon: QrCode, tone: 'bg-brand-100 text-brand-600' },
@@ -14,8 +15,12 @@ const quickActions = [
 ];
 
 export default function Dashboard() {
-    const [branch, setBranch] = useState('all');
-    const isSetUp = vendorProfile.status === 'approved';
+    const [branchId, setBranchId] = useState('all');
+    const { data: vendor } = useVendorProfile();
+    const { data: branches } = useVendorBranches();
+    const { data: overview, isLoading, isError, error, refetch } = useVendorDashboard(branchId === 'all' ? null : branchId);
+
+    const isSetUp = vendor?.status === 'approved';
 
     return (
         <div>
@@ -31,14 +36,14 @@ export default function Dashboard() {
                     <p className="font-bold">Today's Overview</p>
                     <div className="relative">
                         <select
-                            value={branch}
-                            onChange={(e) => setBranch(e.target.value)}
+                            value={branchId}
+                            onChange={(e) => setBranchId(e.target.value)}
                             className="appearance-none rounded-full bg-white/15 py-1.5 pl-3 pr-8 text-sm font-medium text-white"
                         >
                             <option value="all" className="text-gray-900">
-                                TK Branches
+                                All Branches
                             </option>
-                            {vendorBranches.map((b) => (
+                            {branches?.map((b) => (
                                 <option key={b.id} value={b.id} className="text-gray-900">
                                     {b.name}
                                 </option>
@@ -47,12 +52,14 @@ export default function Dashboard() {
                         <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                    <OverviewTile label="Stamps Added" value={vendorTodayOverview.stampsAdded} />
-                    <OverviewTile label="Points Added" value={vendorTodayOverview.pointsAdded} />
-                    <OverviewTile label="Stamps Redeemed" value={vendorTodayOverview.stampsRedeemed} />
-                    <OverviewTile label="Points Deducted" value={vendorTodayOverview.pointsDeducted} />
-                </div>
+                <QueryState isLoading={isLoading} isError={isError} error={error} onRetry={refetch}>
+                    <div className="grid grid-cols-2 gap-3">
+                        <OverviewTile label="Stamps Added" value={overview?.today.stamps_added ?? 0} />
+                        <OverviewTile label="Points Added" value={overview?.today.points_added ?? 0} />
+                        <OverviewTile label="Stamps Redeemed" value={overview?.today.stamps_redeemed ?? 0} />
+                        <OverviewTile label="Points Deducted" value={overview?.today.points_deducted ?? 0} />
+                    </div>
+                </QueryState>
             </div>
 
             <div className="px-4 py-5">

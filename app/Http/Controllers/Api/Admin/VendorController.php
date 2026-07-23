@@ -21,7 +21,7 @@ class VendorController extends Controller
     {
         $status = $request->string('status', 'pending')->toString();
 
-        $query = Vendor::query()->with('reviewer:id,name');
+        $query = Vendor::query()->with(['user:id,name,email', 'reviewer:id,name']);
 
         if ($status === 'history') {
             $query->whereIn('status', ['approved', 'rejected']);
@@ -38,7 +38,7 @@ class VendorController extends Controller
     {
         $this->authorize('view', $vendor);
 
-        return new VendorResource($vendor->load('reviewer:id,name'));
+        return new VendorResource($vendor->load(['user:id,name,email', 'reviewer:id,name']));
     }
 
     public function review(ReviewVendorRequest $request, Vendor $vendor)

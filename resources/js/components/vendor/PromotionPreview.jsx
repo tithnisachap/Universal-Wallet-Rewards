@@ -1,9 +1,9 @@
 import { Calendar, Tag, Info } from 'lucide-react';
 import Card from '../ui/Card';
 import StampGrid from '../ui/StampGrid';
-import { vendorProfile } from '../../data/mock';
+import VendorAvatar from '../VendorAvatar';
 
-export default function PromotionPreview({ value, audience = 'customers' }) {
+export default function PromotionPreview({ value, vendor, audience = 'customers' }) {
     return (
         <div className="space-y-4">
             <div>
@@ -13,9 +13,9 @@ export default function PromotionPreview({ value, audience = 'customers' }) {
 
             <Card className="p-0">
                 <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-                    <div className="h-11 w-11 shrink-0 rounded-full bg-amber-900" />
+                    <VendorAvatar vendor={vendor} size="sm" />
                     <div>
-                        <p className="font-bold text-gray-900">{vendorProfile.businessName}</p>
+                        <p className="font-bold text-gray-900">{vendor?.business_name}</p>
                         <p className="text-xs text-gray-500">Earn points and stamps redeem amazing rewards</p>
                     </div>
                 </div>

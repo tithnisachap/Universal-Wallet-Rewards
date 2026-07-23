@@ -4,19 +4,56 @@ import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
-import { vendorProfile } from '../../data/mock';
-import { useSession } from '../../context/SessionContext';
+import ErrorState from '../../components/ui/ErrorState';
+import LoadingState from '../../components/ui/LoadingState';
+import VendorAvatar from '../../components/VendorAvatar';
+import { useVendorProfile } from '../../queries/vendor';
+import { useLogout } from '../../queries/auth';
+
+const STATUS_MESSAGES = {
+    pending: 'Your shop is pending admin approval. you will be notified via email once there is an update.',
+    rejected: 'Your shop application was rejected. Contact support or resubmit your details.',
+    suspended: 'Your shop has been suspended by an administrator.',
+};
 
 export default function Profile() {
     const navigate = useNavigate();
-    const { logout } = useSession();
+    const logout = useLogout();
+    const { data: vendor, isLoading, isError, error, refetch } = useVendorProfile();
 
     function handleLogout() {
-        logout('vendor');
-        navigate('/vendor/login');
+        logout.mutate(undefined, {
+            onSettled: () => navigate('/vendor/login'),
+        });
     }
 
-    if (vendorProfile.status === 'not_completed') {
+    const LogoutLink = (
+        <button onClick={handleLogout} className="mt-4 flex w-full items-center justify-center gap-2 text-sm font-semibold text-danger-500">
+            <LogOut size={16} /> Logout
+        </button>
+    );
+
+    if (isLoading) {
+        return (
+            <div>
+                <PageHeader title="Profile" />
+                <LoadingState />
+            </div>
+        );
+    }
+
+    if (isError && error.status !== 404) {
+        return (
+            <div>
+                <PageHeader title="Profile" />
+                <div className="px-4 py-4">
+                    <ErrorState message={error.message} onRetry={refetch} />
+                </div>
+            </div>
+        );
+    }
+
+    if (isError && error.status === 404) {
         return (
             <div>
                 <PageHeader title="Profile" />
@@ -36,28 +73,25 @@ export default function Profile() {
                             Complete Profile
                         </Button>
                     </Card>
-
-                    <button onClick={handleLogout} className="mt-4 flex w-full items-center justify-center gap-2 text-sm font-semibold text-danger-500">
-                        <LogOut size={16} /> Logout
-                    </button>
+                    {LogoutLink}
                 </div>
             </div>
         );
     }
 
-    if (vendorProfile.status === 'pending') {
+    if (vendor.status !== 'approved') {
         return (
             <div>
                 <PageHeader title="Profile" />
                 <div className="px-4 py-4">
                     <Card>
                         <div className="flex items-center gap-3">
-                            <div className="h-14 w-14 shrink-0 rounded-full bg-amber-900" />
+                            <VendorAvatar vendor={vendor} size="lg" />
                             <div>
-                                <p className="font-bold text-gray-900">{vendorProfile.businessName}</p>
-                                <p className="text-sm text-gray-500">{vendorProfile.category}</p>
-                                <Badge tone="pending" className="mt-1">
-                                    Pending
+                                <p className="font-bold text-gray-900">{vendor.business_name}</p>
+                                <p className="text-sm text-gray-500">{vendor.category}</p>
+                                <Badge tone={vendor.status} className="mt-1">
+                                    {vendor.status}
                                 </Badge>
                             </div>
                         </div>
@@ -65,14 +99,13 @@ export default function Profile() {
 
                     <Card className="mt-4">
                         <p className="font-bold text-gray-900">Status</p>
-                        <p className="mt-2 text-sm text-gray-500">
-                            Your shop is pending admin approval. you will be notified via email once there is an update.
-                        </p>
+                        <p className="mt-2 text-sm text-gray-500">{STATUS_MESSAGES[vendor.status]}</p>
+                        {vendor.review_note ? (
+                            <p className="mt-2 rounded-lg bg-gray-50 p-3 text-sm text-gray-600">"{vendor.review_note}"</p>
+                        ) : null}
                     </Card>
 
-                    <button onClick={handleLogout} className="mt-4 flex w-full items-center justify-center gap-2 text-sm font-semibold text-danger-500">
-                        <LogOut size={16} /> Logout
-                    </button>
+                    {LogoutLink}
                 </div>
             </div>
         );
@@ -84,10 +117,10 @@ export default function Profile() {
             <div className="space-y-4 px-4 py-4">
                 <Card>
                     <div className="flex items-center gap-3">
-                        <div className="h-14 w-14 shrink-0 rounded-full bg-amber-900" />
+                        <VendorAvatar vendor={vendor} size="lg" />
                         <div>
-                            <p className="font-bold text-gray-900">{vendorProfile.businessName}</p>
-                            <p className="text-sm text-gray-500">{vendorProfile.category}</p>
+                            <p className="font-bold text-gray-900">{vendor.business_name}</p>
+                            <p className="text-sm text-gray-500">{vendor.category}</p>
                             <Badge tone="approved" className="mt-1">
                                 Approved
                             </Badge>
@@ -98,21 +131,19 @@ export default function Profile() {
                 <Card>
                     <p className="mb-2 font-bold text-gray-900">Business Information</p>
                     <dl className="divide-y divide-gray-100">
-                        <Row label="Business Name" value={vendorProfile.businessName} />
-                        <Row label="Category" value={vendorProfile.category} />
-                        <Row label="Phone Number" value={vendorProfile.phone} />
-                        <Row label="Email" value={vendorProfile.email} />
-                        <Row label="Address" value={vendorProfile.address} />
+                        <Row label="Business Name" value={vendor.business_name} />
+                        <Row label="Category" value={vendor.category} />
+                        <Row label="Phone Number" value={vendor.phone || '—'} />
+                        <Row label="Email" value={vendor.email || '—'} />
+                        <Row label="Address" value={vendor.address || '—'} />
                         <Row
                             label="Website"
-                            value={<span className="text-brand-600 underline">{vendorProfile.website}</span>}
+                            value={vendor.website ? <span className="text-brand-600 underline">{vendor.website}</span> : '—'}
                         />
                     </dl>
                 </Card>
 
-                <button onClick={handleLogout} className="flex w-full items-center justify-center gap-2 text-sm font-semibold text-danger-500">
-                    <LogOut size={16} /> Logout
-                </button>
+                {LogoutLink}
             </div>
         </div>
     );

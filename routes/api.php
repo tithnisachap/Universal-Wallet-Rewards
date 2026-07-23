@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AnalyticsController as AdminAnalyticsController;
+use App\Http\Controllers\Api\Auth\DevLoginController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\VendorController as AdminVendorController;
 use App\Http\Controllers\Api\Customer\ActivityController as CustomerActivityController;
@@ -25,8 +26,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json(['status' => 'ok']));
 
+// TEMPORARY — stand-in for Google OAuth. See DevLoginController docblock.
+Route::post('/auth/dev-login', [DevLoginController::class, 'store']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [MeController::class, 'show']);
+    Route::post('/auth/logout', [DevLoginController::class, 'destroy']);
 
     // ---- Customer -------------------------------------------------------
     Route::middleware('role:customer')->prefix('customer')->group(function () {

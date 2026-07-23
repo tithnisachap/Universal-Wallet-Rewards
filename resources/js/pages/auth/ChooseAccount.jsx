@@ -1,8 +1,8 @@
 import { UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/ui/Avatar';
-import { googleAccounts } from '../../data/mock';
-import { useSession } from '../../context/SessionContext';
+import { demoAccountsByRole } from '../../data/demoAccounts';
+import { useDevLogin } from '../../queries/auth';
 
 const homeRoutes = {
     customer: '/customer/coupons',
@@ -12,11 +12,18 @@ const homeRoutes = {
 
 export default function ChooseAccount({ role }) {
     const navigate = useNavigate();
-    const { login } = useSession();
+    const devLogin = useDevLogin();
+    const accounts = demoAccountsByRole[role] ?? [];
 
-    function selectAccount() {
-        login(role);
-        navigate(homeRoutes[role]);
+    function selectAccount(email) {
+        devLogin.mutate(email, {
+            onSuccess: () => navigate(homeRoutes[role]),
+        });
+    }
+
+    function useAnotherAccount() {
+        const email = window.prompt('Enter the account email');
+        if (email) selectAccount(email.trim());
     }
 
     return (
@@ -26,11 +33,12 @@ export default function ChooseAccount({ role }) {
             <p className="mt-2 text-center text-sm text-gray-500">Choose an account to continue to Universal Wallet</p>
 
             <div className="mt-8 w-full overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
-                {googleAccounts.map((account) => (
+                {accounts.map((account) => (
                     <button
                         key={account.email}
-                        onClick={selectAccount}
-                        className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-0 hover:bg-gray-50"
+                        onClick={() => selectAccount(account.email)}
+                        disabled={devLogin.isPending}
+                        className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-0 hover:bg-gray-50 disabled:opacity-60"
                     >
                         <Avatar src={account.avatar} size={36} />
                         <div>
@@ -39,13 +47,21 @@ export default function ChooseAccount({ role }) {
                         </div>
                     </button>
                 ))}
-                <button onClick={selectAccount} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50">
+                <button
+                    onClick={useAnotherAccount}
+                    disabled={devLogin.isPending}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 disabled:opacity-60"
+                >
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-brand-500">
                         <UserPlus size={18} />
                     </span>
                     <span className="text-sm font-medium text-gray-900">Use another account</span>
                 </button>
             </div>
+
+            {devLogin.isError ? (
+                <p className="mt-4 text-center text-sm text-danger-500">{devLogin.error.message}</p>
+            ) : null}
 
             <p className="mt-auto max-w-xs pb-10 pt-16 text-center text-xs text-gray-400">
                 By continuing, you agree to our <span className="text-brand-600">Terms of Service</span> and{' '}
