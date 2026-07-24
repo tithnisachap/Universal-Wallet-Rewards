@@ -2,6 +2,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/apiClient';
 import { useSession } from '../context/SessionContext';
 
+export function useAuthConfig() {
+    return useQuery({
+        queryKey: ['auth', 'config'],
+        queryFn: () => api.get('/auth/config'),
+        staleTime: Infinity,
+    });
+}
+
 export function useMe(options = {}) {
     const { token } = useSession();
     const { enabled = true, ...rest } = options;
@@ -21,6 +29,19 @@ export function useDevLogin() {
 
     return useMutation({
         mutationFn: (email) => api.post('/auth/dev-login', { email }),
+        onSuccess: (data) => {
+            login(data.token);
+            queryClient.setQueryData(['me'], data.user);
+        },
+    });
+}
+
+export function useDevSignup() {
+    const { login } = useSession();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload) => api.post('/auth/dev-signup', payload),
         onSuccess: (data) => {
             login(data.token);
             queryClient.setQueryData(['me'], data.user);

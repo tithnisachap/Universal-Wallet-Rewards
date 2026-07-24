@@ -56,7 +56,7 @@ export default function Branches() {
                         emptyState={<EmptyState icon={Store} title="No branches yet" description="Add your first branch to get started." />}
                     >
                         {branches?.map((branch) => (
-                            <Link key={branch.id} to={`/vendor/branches/${branch.id}`}>
+                            <Link key={branch.id} to={`/vendor/branches/${branch.id}`} className="block">
                                 <Card className="flex items-center gap-3">
                                     {branch.photo_path ? (
                                         <img

@@ -25,6 +25,9 @@ export default function UserWallet() {
     const addPoints = useAddPoints();
     const deductPoints = useDeductPoints();
 
+    const isStampCardFull =
+        activeStampPromotion && (scan.data?.stamps_count ?? 0) >= activeStampPromotion.required_amount;
+
     function refresh() {
         scan.mutate(code);
     }
@@ -100,22 +103,30 @@ export default function UserWallet() {
                                         </Card>
                                     ) : null}
 
-                                    <Card>
-                                        <p className="mb-3 text-center font-semibold text-gray-900">Amount of Stamps to Add</p>
-                                        <div className="flex items-center justify-between">
-                                            <RoundButton onClick={() => setStampsToAdd((v) => Math.max(1, v - 1))} icon={Minus} />
-                                            <div className="text-center">
-                                                <p className="text-2xl font-bold text-gray-900">{stampsToAdd}</p>
-                                                <p className="text-xs text-gray-400">Stamps</p>
+                                    {isStampCardFull ? (
+                                        <Card className="bg-warning-50">
+                                            <p className="text-sm font-medium text-warning-600">
+                                                This stamp card is full. The customer needs to redeem their reward before earning more stamps.
+                                            </p>
+                                        </Card>
+                                    ) : (
+                                        <Card>
+                                            <p className="mb-3 text-center font-semibold text-gray-900">Amount of Stamps to Add</p>
+                                            <div className="flex items-center justify-between">
+                                                <RoundButton onClick={() => setStampsToAdd((v) => Math.max(1, v - 1))} icon={Minus} />
+                                                <div className="text-center">
+                                                    <p className="text-2xl font-bold text-gray-900">{stampsToAdd}</p>
+                                                    <p className="text-xs text-gray-400">Stamps</p>
+                                                </div>
+                                                <RoundButton onClick={() => setStampsToAdd((v) => v + 1)} icon={Plus} filled />
                                             </div>
-                                            <RoundButton onClick={() => setStampsToAdd((v) => v + 1)} icon={Plus} filled />
-                                        </div>
-                                    </Card>
+                                        </Card>
+                                    )}
 
                                     {addStamps.isError ? <p className="text-sm text-danger-500">{addStamps.error.message}</p> : null}
 
-                                    <Button icon={PlusCircle} onClick={handleAddStamps} disabled={addStamps.isPending}>
-                                        {addStamps.isPending ? 'Adding...' : 'Add Stamp'}
+                                    <Button icon={PlusCircle} onClick={handleAddStamps} disabled={addStamps.isPending || isStampCardFull}>
+                                        {addStamps.isPending ? 'Adding...' : isStampCardFull ? 'Card Full' : 'Add Stamp'}
                                     </Button>
                                 </>
                             ) : (

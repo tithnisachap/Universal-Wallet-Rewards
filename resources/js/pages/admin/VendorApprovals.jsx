@@ -5,10 +5,16 @@ import { SegmentedControl, PillTabs } from '../../components/ui/Tabs';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
+import Switch from '../../components/ui/Switch';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
 import VendorAvatar from '../../components/VendorAvatar';
-import { useAdminVendors, useReviewVendor } from '../../queries/admin';
+import {
+    useAdminVendors,
+    useReviewVendor,
+    usePlatformSettings,
+    useUpdatePlatformSettings,
+} from '../../queries/admin';
 
 const statusTabs = [
     { value: 'pending', label: 'Pending' },
@@ -22,11 +28,35 @@ export default function VendorApprovals() {
     const status = topTab === 'history' ? 'history' : statusTab;
 
     const { data: vendors, isLoading, isError, error, refetch } = useAdminVendors(status);
+    // Independent of whichever tab is active, so the "Pending (N)" badge
+    // doesn't flicker to whatever count happens to be currently displayed.
+    const { data: pendingVendors } = useAdminVendors('pending');
+
+    const { data: settings } = usePlatformSettings();
+    const updateSettings = useUpdatePlatformSettings();
 
     return (
         <div className="px-4 py-4">
             <h1 className="text-2xl font-bold text-gray-900">Vendor Approvals</h1>
             <p className="text-sm text-gray-500">Manage incoming vendor applications</p>
+
+            <Card className="mt-4 flex items-center justify-between gap-3">
+                <div>
+                    <p className="font-semibold text-gray-900">Require approval for new shops</p>
+                    <p className="text-sm text-gray-500">
+                        {settings?.auto_approve_vendors
+                            ? 'Off — new shops go live immediately, no review needed.'
+                            : 'On — new shops wait here for approval before going live.'}
+                    </p>
+                </div>
+                <Switch
+                    checked={!settings?.auto_approve_vendors}
+                    disabled={!settings || updateSettings.isPending}
+                    onChange={(requireApproval) =>
+                        updateSettings.mutate({ auto_approve_vendors: !requireApproval })
+                    }
+                />
+            </Card>
 
             <SegmentedControl
                 className="mt-4"
@@ -43,7 +73,7 @@ export default function VendorApprovals() {
                     <PillTabs
                         options={statusTabs.map((tab) => ({
                             ...tab,
-                            label: tab.value === 'pending' ? `Pending (${vendors?.length ?? 0})` : tab.label,
+                            label: tab.value === 'pending' ? `Pending (${pendingVendors?.length ?? 0})` : tab.label,
                         }))}
                         value={statusTab}
                         onChange={setStatusTab}
@@ -84,7 +114,7 @@ export default function VendorApprovals() {
                             emptyState={<EmptyState icon={Store} title="No history yet" description="Reviewed applications will show up here." />}
                         >
                             {vendors?.map((item) => (
-                                <Link key={item.id} to={`/admin/vendors/${item.id}/review`}>
+                                <Link key={item.id} to={`/admin/vendors/${item.id}/review`} className="block">
                                     <Card className="flex items-center gap-3">
                                         <VendorAvatar vendor={item} />
                                         <div className="flex-1">
@@ -115,7 +145,7 @@ function VendorApplicationCard({ app, statusTab }) {
     }
 
     return (
-        <Link to={`/admin/vendors/${app.id}/review`}>
+        <Link to={`/admin/vendors/${app.id}/review`} className="block">
             <Card>
                 <div className="mb-2 flex items-start justify-between">
                     <div className="flex items-center gap-3">

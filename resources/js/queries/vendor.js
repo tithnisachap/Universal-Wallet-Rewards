@@ -77,6 +77,36 @@ export function useUpdateBranch(branchId) {
     });
 }
 
+export function useBranchStaff(branchId) {
+    return useQuery({
+        queryKey: ['vendor', 'branches', branchId, 'staff'],
+        queryFn: () => api.get(`/vendor/branches/${branchId}/staff`),
+        enabled: Boolean(branchId),
+    });
+}
+
+export function useInviteBranchStaff(branchId) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload) => api.post(`/vendor/branches/${branchId}/staff`, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['vendor', 'branches', branchId, 'staff'] });
+        },
+    });
+}
+
+export function useRevokeBranchStaff(branchId) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (staffId) => api.delete(`/vendor/branches/${branchId}/staff/${staffId}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['vendor', 'branches', branchId, 'staff'] });
+        },
+    });
+}
+
 export function useVendorPromotions() {
     return useQuery({
         queryKey: ['vendor', 'promotions'],

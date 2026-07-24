@@ -4,15 +4,19 @@ namespace App\Http\Requests\Vendor;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class StoreVendorProfileRequest extends FormRequest
+class InviteBranchStaffRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     *
+     * Ownership of the branch itself is checked in the controller via
+     * BranchPolicy::update, since that needs the route-bound {branch}.
      */
     public function authorize(): bool
     {
-        return $this->user()?->role === 'vendor' && ! $this->user()->vendor()->exists();
+        return $this->user()?->vendor?->status === 'approved';
     }
 
     /**
@@ -23,12 +27,7 @@ class StoreVendorProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'logo' => ['nullable', 'image', 'max:5120'],
-            'business_name' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'string', 'max:100'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'address' => ['required', 'string', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
+            'email' => ['required', 'email', Rule::unique('branch_staff', 'email')],
         ];
     }
 }

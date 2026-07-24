@@ -1,16 +1,45 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Clock, Phone, Calendar, ShieldCheck, Pencil, Check } from 'lucide-react';
+import { MapPin, Clock, Phone, Calendar, ShieldCheck, Pencil, Check, UserPlus, X } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
+import Modal from '../../components/ui/Modal';
+import { Field, Input } from '../../components/ui/Field';
 import QueryState from '../../components/ui/QueryState';
 import { formatOpeningHours } from '../../lib/formatOpeningHours';
-import { useVendorBranch } from '../../queries/vendor';
+import {
+    useVendorBranch,
+    useBranchStaff,
+    useInviteBranchStaff,
+    useRevokeBranchStaff,
+} from '../../queries/vendor';
 
 export default function BranchDetail() {
     const { branchId } = useParams();
     const { data: branch, isLoading, isError, error, refetch } = useVendorBranch(branchId);
+    const { data: staff } = useBranchStaff(branchId);
+    const inviteStaff = useInviteBranchStaff(branchId);
+    const revokeStaff = useRevokeBranchStaff(branchId);
+    const [isInviting, setIsInviting] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState('');
+
+    function handleInvite(e) {
+        e.preventDefault();
+        const email = inviteEmail.trim();
+        if (!email) return;
+
+        inviteStaff.mutate(
+            { email },
+            {
+                onSuccess: () => {
+                    setIsInviting(false);
+                    setInviteEmail('');
+                },
+            },
+        );
+    }
 
     return (
         <div>
@@ -91,9 +120,82 @@ export default function BranchDetail() {
                                 </Card>
                             ) : null}
 
+                            <Card className="mt-4">
+                                <div className="mb-3 flex items-center justify-between">
+                                    <p className="font-semibold text-gray-900">Branch Staff</p>
+                                    <button
+                                        onClick={() => {
+                                            setInviteEmail('');
+                                            setIsInviting(true);
+                                        }}
+                                        className="flex items-center gap-1 text-sm font-semibold text-brand-600"
+                                    >
+                                        <UserPlus size={16} /> Invite
+                                    </button>
+                                </div>
+
+                                {staff?.length ? (
+                                    <div className="space-y-2">
+                                        {staff.map((member) => (
+                                            <div
+                                                key={member.id}
+                                                className="flex items-center justify-between gap-2 rounded-xl bg-gray-50 px-3 py-2"
+                                            >
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-medium text-gray-900">
+                                                        {member.user?.name ?? member.email}
+                                                    </p>
+                                                    <p className="truncate text-xs text-gray-500">{member.email}</p>
+                                                </div>
+                                                <div className="flex shrink-0 items-center gap-2">
+                                                    <Badge tone={member.accepted_at ? 'approved' : 'pending'}>
+                                                        {member.accepted_at ? 'Active' : 'Pending'}
+                                                    </Badge>
+                                                    <button
+                                                        onClick={() => revokeStaff.mutate(member.id)}
+                                                        disabled={revokeStaff.isPending}
+                                                        className="rounded-full p-1 text-gray-400 hover:bg-gray-200 hover:text-danger-500"
+                                                        aria-label="Revoke access"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500">
+                                        No one else has access to this branch yet. Invite a Google account to let them
+                                        scan customers and manage stamps/points here.
+                                    </p>
+                                )}
+                            </Card>
+
                             <Button as={Link} to={`/vendor/branches/${branch.id}/edit`} icon={Pencil} className="mt-5">
                                 Edit Branch Information
                             </Button>
+
+                            <Modal open={isInviting} onClose={() => setIsInviting(false)} title="Invite Branch Staff">
+                                <form onSubmit={handleInvite} className="space-y-4">
+                                    <Field label="Google Account Email" hint="They'll sign in with this exact address">
+                                        <Input
+                                            type="email"
+                                            value={inviteEmail}
+                                            onChange={(e) => setInviteEmail(e.target.value)}
+                                            autoFocus
+                                            required
+                                        />
+                                    </Field>
+
+                                    {inviteStaff.isError ? (
+                                        <p className="text-sm text-danger-500">{inviteStaff.error.message}</p>
+                                    ) : null}
+
+                                    <Button type="submit" disabled={inviteStaff.isPending || !inviteEmail.trim()}>
+                                        {inviteStaff.isPending ? 'Inviting...' : 'Send Invite'}
+                                    </Button>
+                                </form>
+                            </Modal>
                         </>
                     ) : null}
                 </QueryState>

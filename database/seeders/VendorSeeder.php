@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Branch;
+use App\Models\BranchStaff;
 use App\Models\Promotion;
 use App\Models\User;
 use App\Models\Vendor;
@@ -45,6 +46,38 @@ class VendorSeeder extends Seeder
 
         Vendor::factory()->count(2)->pending()->create();
         Vendor::factory()->count(1)->rejected()->create();
+
+        $this->seedBranchStaff();
+    }
+
+    /**
+     * Demo branch-staff account (dev-login fallback for the branch_staff
+     * role — see resources/js/data/demoAccounts.js), pre-linked and accepted
+     * so it works out of the box without going through the invite flow.
+     */
+    private function seedBranchStaff(): void
+    {
+        $branch = Branch::whereHas('vendor', fn ($query) => $query->where('business_name', 'The Coffee Bean'))
+            ->where('name', 'BKK1 Branch')
+            ->first();
+
+        if (! $branch) {
+            return;
+        }
+
+        $staffUser = User::factory()->create([
+            'name' => 'Branch Staff',
+            'email' => 'staff@gmail.com',
+            'role' => 'branch_staff',
+        ]);
+
+        BranchStaff::create([
+            'branch_id' => $branch->id,
+            'user_id' => $staffUser->id,
+            'email' => $staffUser->email,
+            'invited_by' => $branch->vendor->user_id,
+            'accepted_at' => now(),
+        ]);
     }
 
     private function seedCoffeeBean(User $admin): void

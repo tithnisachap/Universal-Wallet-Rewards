@@ -24,7 +24,7 @@ export default function More() {
 
     function handleLogout() {
         logout.mutate(undefined, {
-            onSettled: () => navigate('/admin/login'),
+            onSettled: () => navigate('/login'),
         });
     }
 

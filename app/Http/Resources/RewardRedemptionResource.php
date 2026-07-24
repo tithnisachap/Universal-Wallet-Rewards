@@ -17,6 +17,7 @@ class RewardRedemptionResource extends JsonResource
         return [
             'id' => $this->id,
             'customer_id' => $this->customer_id,
+            'customer_code' => $this->whenLoaded('customer', fn () => $this->customer->customer_code),
             'vendor_id' => $this->vendor_id,
             'promotion' => new PromotionResource($this->whenLoaded('promotion')),
             'code' => $this->code,

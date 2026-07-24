@@ -41,7 +41,7 @@ export default function VendorBranches() {
                         emptyState={<EmptyState icon={Store} title="No branches yet" description="This vendor hasn't added any branches." />}
                     >
                         {vendorBranches?.map((branch) => (
-                            <Link key={branch.id} to={`/customer/vendors/${vendorId}/branches/${branch.id}`}>
+                            <Link key={branch.id} to={`/customer/vendors/${vendorId}/branches/${branch.id}`} className="block">
                                 <Card className="flex items-center gap-3">
                                     {branch.photo_path ? (
                                         <img

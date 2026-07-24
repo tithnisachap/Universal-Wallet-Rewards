@@ -64,6 +64,14 @@ class User extends Authenticatable
     }
 
     /**
+     * The single branch this user has been granted staff access to, if any.
+     */
+    public function branchStaff(): HasOne
+    {
+        return $this->hasOne(BranchStaff::class);
+    }
+
+    /**
      * Vendor applications this admin user has reviewed.
      */
     public function reviewedVendors(): HasMany

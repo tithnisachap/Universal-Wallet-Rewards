@@ -1,30 +1,18 @@
-import { ArrowRight, FileText } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { FileText } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
+import { useAuthConfig } from '../../queries/auth';
 
-const brandTags = {
-    customer: 'Cafe Loyalty',
-    vendor: 'Cafe Loyalty',
-    admin: 'Platform Admin',
-};
-
-export default function Login({ role }) {
+export default function Login() {
     const navigate = useNavigate();
+    const { data: authConfig } = useAuthConfig();
+    const googleOAuthEnabled = authConfig?.google_oauth_enabled;
 
     return (
         <div className="flex min-h-screen flex-col">
             <div className="relative h-64 shrink-0 overflow-hidden bg-brand-600">
                 <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
                 <div className="absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
-                <div className="absolute left-6 top-14 flex items-center gap-2 rounded-xl bg-white/95 px-3 py-2 shadow-sm">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-white">
-                        <ArrowRight size={16} />
-                    </span>
-                    <div className="leading-tight">
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Merchant</p>
-                        <p className="text-xs font-bold text-gray-900">{brandTags[role]}</p>
-                    </div>
-                </div>
             </div>
 
             <div className="-mt-6 flex flex-1 flex-col rounded-t-3xl bg-white px-6 pt-10">
@@ -40,14 +28,33 @@ export default function Login({ role }) {
                     The simple way to manage your rewards and loyalty cards in one digital place.
                 </p>
 
-                <Button
-                    variant="outline"
-                    className="mt-8 border-gray-200 !text-gray-700"
-                    onClick={() => navigate(`/${role}/choose-account`)}
-                >
-                    <GoogleIcon />
-                    Continue with Google
-                </Button>
+                {googleOAuthEnabled ? (
+                    <Button
+                        as="a"
+                        href="/auth/google/redirect"
+                        variant="outline"
+                        className="mt-8 border-gray-200 !text-gray-700"
+                    >
+                        <GoogleIcon />
+                        Continue with Google
+                    </Button>
+                ) : (
+                    <Button
+                        variant="outline"
+                        className="mt-8 border-gray-200 !text-gray-700"
+                        onClick={() => navigate('/login/choose-account')}
+                    >
+                        <GoogleIcon />
+                        Continue with Google
+                    </Button>
+                )}
+
+                <p className="mt-6 text-center text-sm text-gray-500">
+                    New here?{' '}
+                    <Link to="/signup" className="font-semibold text-brand-600">
+                        Create an account
+                    </Link>
+                </p>
             </div>
         </div>
     );

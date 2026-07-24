@@ -23,7 +23,7 @@ export default function ShopSetup() {
         payload.set('business_name', form.get('business_name'));
         payload.set('category', form.get('category'));
         if (phoneNumber) payload.set('phone', `${phoneCode} ${phoneNumber}`);
-        if (form.get('address')) payload.set('address', form.get('address'));
+        payload.set('address', form.get('address'));
         if (form.get('website')) payload.set('website', form.get('website'));
         if (logoInputRef.current?.files[0]) payload.set('logo', logoInputRef.current.files[0]);
 
@@ -106,7 +106,7 @@ export default function ShopSetup() {
                 </div>
 
                 <Field label="Address">
-                    <Textarea name="address" placeholder="Enter business address" />
+                    <Textarea name="address" placeholder="Enter business address" required />
                 </Field>
 
                 <Field label="Website (Optional)">

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Api\Auth\DevLoginController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Api\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Api\Admin\VendorController as AdminVendorController;
 use App\Http\Controllers\Api\Customer\ActivityController as CustomerActivityController;
 use App\Http\Controllers\Api\Customer\BranchController as CustomerBranchController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Api\MeController;
 use App\Http\Controllers\Api\Vendor\ActivityController as VendorActivityController;
 use App\Http\Controllers\Api\Vendor\AnalyticsController as VendorAnalyticsController;
 use App\Http\Controllers\Api\Vendor\BranchController as VendorBranchController;
+use App\Http\Controllers\Api\Vendor\BranchStaffController;
 use App\Http\Controllers\Api\Vendor\DashboardController as VendorDashboardController;
 use App\Http\Controllers\Api\Vendor\PointTransactionController;
 use App\Http\Controllers\Api\Vendor\ProfileController as VendorProfileController;
@@ -26,8 +28,16 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json(['status' => 'ok']));
 
-// TEMPORARY — stand-in for Google OAuth. See DevLoginController docblock.
+// Lets the frontend know whether real Google OAuth credentials are
+// configured yet, so the login screen can fall back to dev-login until
+// GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are set.
+Route::get('/auth/config', fn () => response()->json([
+    'data' => ['google_oauth_enabled' => filled(config('services.google.client_id'))],
+]));
+
+// Dev-only fallback for the real Google OAuth flow. See DevLoginController docblock.
 Route::post('/auth/dev-login', [DevLoginController::class, 'store']);
+Route::post('/auth/dev-signup', [DevLoginController::class, 'signup']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [MeController::class, 'show']);
@@ -50,7 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/qr-code', [QrCodeController::class, 'show']);
     });
 
-    // ---- Vendor -----------------------------------------------------------
+    // ---- Vendor (owner-only) ------------------------------------------------
     Route::middleware('role:vendor')->prefix('vendor')->group(function () {
         Route::get('/profile', [VendorProfileController::class, 'show']);
         Route::post('/profile', [VendorProfileController::class, 'store']);
@@ -63,10 +73,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/branches/{branch}', [VendorBranchController::class, 'show']);
         Route::put('/branches/{branch}', [VendorBranchController::class, 'update']);
 
-        Route::get('/promotions', [VendorPromotionController::class, 'index']);
+        Route::get('/branches/{branch}/staff', [BranchStaffController::class, 'index']);
+        Route::post('/branches/{branch}/staff', [BranchStaffController::class, 'store']);
+        Route::delete('/branches/{branch}/staff/{staff}', [BranchStaffController::class, 'destroy']);
+
         Route::post('/promotions', [VendorPromotionController::class, 'store']);
         Route::get('/promotions/{promotion}', [VendorPromotionController::class, 'show']);
         Route::put('/promotions/{promotion}', [VendorPromotionController::class, 'update']);
+
+        Route::get('/analytics', [VendorAnalyticsController::class, 'show']);
+    });
+
+    // ---- Vendor (owner or branch-scoped staff) -------------------------------
+    Route::middleware('role:vendor,branch_staff')->prefix('vendor')->group(function () {
+        Route::get('/promotions', [VendorPromotionController::class, 'index']);
 
         Route::post('/scan', [ScanController::class, 'store']);
 
@@ -77,7 +97,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/redemptions/redeem', [VendorRedemptionController::class, 'store']);
 
         Route::get('/activities', [VendorActivityController::class, 'index']);
-        Route::get('/analytics', [VendorAnalyticsController::class, 'show']);
     });
 
     // ---- Admin --------------------------------------------------------------
@@ -91,5 +110,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vendors/{vendor}/reinstate', [AdminVendorController::class, 'reinstate']);
 
         Route::get('/analytics', [AdminAnalyticsController::class, 'show']);
+
+        Route::get('/settings', [AdminSettingsController::class, 'show']);
+        Route::put('/settings', [AdminSettingsController::class, 'update']);
     });
 });

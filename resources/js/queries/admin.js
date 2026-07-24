@@ -65,3 +65,21 @@ export function useAdminAnalytics(period = 'month') {
         queryFn: () => api.get('/admin/analytics', { params: { period } }),
     });
 }
+
+export function usePlatformSettings() {
+    return useQuery({
+        queryKey: ['admin', 'settings'],
+        queryFn: () => api.get('/admin/settings'),
+    });
+}
+
+export function useUpdatePlatformSettings() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload) => api.put('/admin/settings', payload),
+        onSuccess: (data) => {
+            queryClient.setQueryData(['admin', 'settings'], data);
+        },
+    });
+}

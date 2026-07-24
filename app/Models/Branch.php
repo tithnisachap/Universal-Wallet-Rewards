@@ -43,4 +43,9 @@ class Branch extends Model
     {
         return $this->hasMany(CustomerActivity::class);
     }
+
+    public function staff(): HasMany
+    {
+        return $this->hasMany(BranchStaff::class);
+    }
 }

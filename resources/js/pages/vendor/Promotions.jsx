@@ -76,7 +76,7 @@ export default function Promotions() {
                         {list.map((promo) => {
                             const Icon = categoryIcons[promo.category] ?? Tag;
                             return (
-                                <Link key={promo.id} to={`/vendor/promotions/${promo.id}/edit`}>
+                                <Link key={promo.id} to={`/vendor/promotions/${promo.id}/edit`} className="block">
                                     <Card className="flex items-center gap-3">
                                         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
                                             <Icon size={18} />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Star, Tag, Store } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SearchInput from '../../components/ui/SearchInput';
@@ -18,6 +18,16 @@ export default function Coupons() {
     }, [search]);
 
     const { data: vendors, isLoading, isError, error, refetch } = useVendorDirectory(debouncedSearch);
+
+    const sortedVendors = useMemo(() => {
+        if (!vendors) return vendors;
+
+        function hasBalance(vendor) {
+            return (vendor.loyalty?.stamps_count ?? 0) > 0 || (vendor.loyalty?.points_balance ?? 0) > 0;
+        }
+
+        return [...vendors].sort((a, b) => Number(hasBalance(b)) - Number(hasBalance(a)));
+    }, [vendors]);
 
     return (
         <div className="px-4 pb-6 pt-6">
@@ -47,8 +57,8 @@ export default function Coupons() {
                         />
                     }
                 >
-                    {vendors?.map((vendor) => (
-                        <Link key={vendor.id} to={`/customer/vendors/${vendor.id}/branches`}>
+                    {sortedVendors?.map((vendor) => (
+                        <Link key={vendor.id} to={`/customer/vendors/${vendor.id}/branches`} className="block">
                             <Card className="flex items-center gap-3">
                                 <VendorAvatar vendor={vendor} size="lg" />
                                 <div className="min-w-0 flex-1">

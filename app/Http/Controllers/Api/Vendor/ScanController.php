@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api\Vendor;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\CustomerLoyalty;
+use App\Services\VendorAccessResolver;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class ScanController extends Controller
 {
+    public function __construct(private readonly VendorAccessResolver $access) {}
+
     /**
      * Resolves a scanned customer QR code into the "User Wallet" screen:
      * the customer's identity plus their current balance at this vendor.
@@ -21,7 +24,7 @@ class ScanController extends Controller
             'code' => ['required', 'string'],
         ]);
 
-        $vendor = $request->user()->vendor;
+        $vendor = $this->access->vendorFor($request->user());
 
         abort_if(! $vendor || $vendor->status !== 'approved', 403, 'Your shop must be approved to scan customers.');
 

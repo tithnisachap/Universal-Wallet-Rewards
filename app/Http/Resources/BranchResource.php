@@ -17,7 +17,7 @@ class BranchResource extends JsonResource
         return [
             'id' => $this->id,
             'vendor_id' => $this->vendor_id,
-            'vendor_name' => $this->whenLoaded('vendor', fn () => $this->vendor->business_name, $this->attributes['vendor_name'] ?? null),
+            'vendor_name' => $this->whenLoaded('vendor', fn () => $this->vendor->business_name, $this->vendor_name),
             'name' => $this->name,
             'address' => $this->address,
             'phone' => $this->phone,

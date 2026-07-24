@@ -1,23 +1,29 @@
 import { UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/ui/Avatar';
+import Badge from '../../components/ui/Badge';
 import { demoAccountsByRole } from '../../data/demoAccounts';
+import { homeRoutesByRole } from '../../data/homeRoutes';
 import { useDevLogin } from '../../queries/auth';
 
-const homeRoutes = {
-    customer: '/customer/coupons',
-    vendor: '/vendor/dashboard',
-    admin: '/admin/dashboard',
+const roleLabels = {
+    customer: 'Customer',
+    vendor: 'Vendor',
+    admin: 'Admin',
+    branch_staff: 'Staff',
 };
 
-export default function ChooseAccount({ role }) {
+const accounts = Object.entries(demoAccountsByRole).flatMap(([role, list]) =>
+    list.map((account) => ({ ...account, role })),
+);
+
+export default function LoginAccountPicker() {
     const navigate = useNavigate();
     const devLogin = useDevLogin();
-    const accounts = demoAccountsByRole[role] ?? [];
 
     function selectAccount(email) {
         devLogin.mutate(email, {
-            onSuccess: () => navigate(homeRoutes[role]),
+            onSuccess: (data) => navigate(homeRoutesByRole[data.user.role] ?? '/login'),
         });
     }
 
@@ -41,10 +47,11 @@ export default function ChooseAccount({ role }) {
                         className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-0 hover:bg-gray-50 disabled:opacity-60"
                     >
                         <Avatar src={account.avatar} size={36} />
-                        <div>
+                        <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-gray-900">{account.name}</p>
-                            <p className="text-sm text-gray-500">{account.email}</p>
+                            <p className="truncate text-sm text-gray-500">{account.email}</p>
                         </div>
+                        <Badge tone="neutral">{roleLabels[account.role] ?? account.role}</Badge>
                     </button>
                 ))}
                 <button

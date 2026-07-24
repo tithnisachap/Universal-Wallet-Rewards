@@ -25,13 +25,21 @@ class LoyaltyService
     {
         return DB::transaction(function () use ($vendor, $customer, $stamps, $branch) {
             $loyalty = $this->lockLoyaltyAccount($customer, $vendor);
+            $promotion = $this->activeStampPromotion($vendor);
+
+            if ($promotion && $loyalty->stamps_count >= $promotion->required_amount) {
+                throw ValidationException::withMessages([
+                    'stamps' => 'This customer\'s stamp card is full. They need to redeem their reward before earning more stamps.',
+                ]);
+            }
+
             $loyalty->increment('stamps_count', $stamps);
 
             return CustomerActivity::create([
                 'customer_id' => $customer->id,
                 'vendor_id' => $vendor->id,
                 'branch_id' => $branch?->id,
-                'promotion_id' => $this->activeStampPromotion($vendor)?->id,
+                'promotion_id' => $promotion?->id,
                 'type' => 'stamp_earned',
                 'amount' => $stamps,
                 'occurred_at' => now(),

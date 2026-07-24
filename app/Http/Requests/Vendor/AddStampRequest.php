@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Vendor;
 
+use App\Services\VendorAccessResolver;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,9 @@ class AddStampRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->vendor?->status === 'approved';
+        $vendor = app(VendorAccessResolver::class)->vendorFor($this->user());
+
+        return $vendor?->status === 'approved';
     }
 
     /**

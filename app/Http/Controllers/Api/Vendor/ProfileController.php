@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Vendor\StoreVendorProfileRequest;
 use App\Http\Requests\Vendor\UpdateVendorProfileRequest;
 use App\Http\Resources\VendorResource;
+use App\Models\PlatformSetting;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
@@ -21,7 +23,11 @@ class ProfileController extends Controller
     }
 
     /**
-     * Shop Setup: creates the vendor profile and submits it for admin review.
+     * Shop Setup: creates the vendor profile and submits it for admin
+     * review. The shop being set up here IS the vendor's first physical
+     * location, so this also creates their main Branch — otherwise a vendor
+     * would be approved with a business but nowhere for customers to find
+     * or for the owner to scan at.
      */
     public function store(StoreVendorProfileRequest $request)
     {
@@ -31,18 +37,34 @@ class ProfileController extends Controller
             ? $request->file('logo')->store('vendor-logos', 'public')
             : null;
 
-        $vendor = Vendor::create([
-            'user_id' => $request->user()->id,
-            'business_name' => $request->validated('business_name'),
-            'category' => $request->validated('category'),
-            'logo_path' => $logoPath,
-            'phone' => $request->validated('phone'),
-            'email' => $request->user()->email,
-            'address' => $request->validated('address'),
-            'website' => $request->validated('website'),
-            'status' => 'pending',
-            'submitted_at' => now(),
-        ]);
+        $autoApprove = PlatformSetting::current()->auto_approve_vendors;
+
+        $vendor = DB::transaction(function () use ($request, $logoPath, $autoApprove) {
+            $vendor = Vendor::create([
+                'user_id' => $request->user()->id,
+                'business_name' => $request->validated('business_name'),
+                'category' => $request->validated('category'),
+                'logo_path' => $logoPath,
+                'phone' => $request->validated('phone'),
+                'email' => $request->user()->email,
+                'address' => $request->validated('address'),
+                'website' => $request->validated('website'),
+                'status' => $autoApprove ? 'approved' : 'pending',
+                'submitted_at' => now(),
+                'reviewed_at' => $autoApprove ? now() : null,
+                'review_note' => $autoApprove ? 'Auto-approved — admin approval was turned off at signup time.' : null,
+            ]);
+
+            $vendor->branches()->create([
+                'name' => $request->validated('business_name'),
+                'address' => $request->validated('address'),
+                'phone' => $request->validated('phone'),
+                'photo_path' => $logoPath,
+                'is_main' => true,
+            ]);
+
+            return $vendor;
+        });
 
         return new VendorResource($vendor);
     }

@@ -23,7 +23,7 @@ export default function Profile() {
 
     function handleLogout() {
         logout.mutate(undefined, {
-            onSettled: () => navigate('/vendor/login'),
+            onSettled: () => navigate('/login'),
         });
     }
 

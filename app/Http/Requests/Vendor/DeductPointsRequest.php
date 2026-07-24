@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Vendor;
 
 use App\Models\CustomerLoyalty;
+use App\Services\VendorAccessResolver;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -14,7 +15,9 @@ class DeductPointsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->vendor?->status === 'approved';
+        $vendor = app(VendorAccessResolver::class)->vendorFor($this->user());
+
+        return $vendor?->status === 'approved';
     }
 
     /**
@@ -34,7 +37,7 @@ class DeductPointsRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            $vendorId = $this->user()->vendor->id;
+            $vendorId = app(VendorAccessResolver::class)->vendorFor($this->user())?->id;
             $customerId = $this->input('customer_id');
             $points = (int) $this->input('points');
 

@@ -7,4 +7,5 @@ export const demoAccountsByRole = {
     ],
     vendor: [{ name: 'John Doe', email: 'john@gmail.com' }],
     admin: [{ name: 'Admin User', email: 'admin@universalwallet.test' }],
+    branch_staff: [{ name: 'Branch Staff', email: 'staff@gmail.com' }],
 };

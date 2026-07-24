@@ -39,7 +39,7 @@ export default function Location() {
 
     return (
         <div className="flex h-screen flex-col">
-            <div className="relative flex-1 overflow-hidden bg-gradient-to-br from-emerald-100 via-sky-100 to-emerald-50">
+            <div className="relative h-72 shrink-0 overflow-hidden bg-gradient-to-br from-emerald-100 via-sky-100 to-emerald-50">
                 <div className="absolute inset-x-4 top-4 z-10">
                     <SearchInput placeholder="Search nearby stores" className="shadow-md" />
                     <div className="mt-3 flex gap-2">
@@ -65,7 +65,7 @@ export default function Location() {
                 ))}
             </div>
 
-            <div className="rounded-t-3xl bg-white px-4 pb-24 pt-5 shadow-[0_-8px_20px_rgba(0,0,0,0.05)]">
+            <div className="flex-1 overflow-y-auto rounded-t-3xl bg-white px-4 pb-24 pt-5 shadow-[0_-8px_20px_rgba(0,0,0,0.05)]">
                 <div className="mb-3 flex items-center justify-between">
                     <div>
                         <p className="font-bold text-gray-900">Nearby Stores</p>

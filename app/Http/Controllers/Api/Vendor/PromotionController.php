@@ -7,13 +7,16 @@ use App\Http\Requests\Vendor\StorePromotionRequest;
 use App\Http\Requests\Vendor\UpdatePromotionRequest;
 use App\Http\Resources\PromotionResource;
 use App\Models\Promotion;
+use App\Services\VendorAccessResolver;
 use Illuminate\Http\Request;
 
 class PromotionController extends Controller
 {
+    public function __construct(private readonly VendorAccessResolver $access) {}
+
     public function index(Request $request)
     {
-        $vendor = $request->user()->vendor;
+        $vendor = $this->access->vendorFor($request->user());
 
         abort_if(! $vendor, 404, 'No shop has been set up yet.');
 

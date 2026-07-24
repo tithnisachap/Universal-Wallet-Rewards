@@ -3,7 +3,10 @@ import { Navigate, createBrowserRouter } from 'react-router-dom';
 import RequireAuth from './components/RequireAuth';
 
 import Login from './pages/auth/Login';
-import ChooseAccount from './pages/auth/ChooseAccount';
+import Signup from './pages/auth/Signup';
+import LoginAccountPicker from './pages/auth/LoginAccountPicker';
+import SignupAccountPicker from './pages/auth/SignupAccountPicker';
+import GoogleCallback from './pages/auth/GoogleCallback';
 
 import CustomerLayout from './layouts/CustomerLayout';
 import Coupons from './pages/customer/Coupons';
@@ -38,11 +41,15 @@ import AdminAnalytics from './pages/admin/Analytics';
 import More from './pages/admin/More';
 
 export const router = createBrowserRouter([
-    { path: '/', element: <Navigate to="/customer/login" replace /> },
+    { path: '/', element: <Navigate to="/login" replace /> },
+    { path: '/auth/google/complete', element: <GoogleCallback /> },
+
+    { path: '/login', element: <Login /> },
+    { path: '/login/choose-account', element: <LoginAccountPicker /> },
+    { path: '/signup', element: <Signup /> },
+    { path: '/signup/choose-account', element: <SignupAccountPicker /> },
 
     // Customer
-    { path: '/customer/login', element: <Login role="customer" /> },
-    { path: '/customer/choose-account', element: <ChooseAccount role="customer" /> },
     {
         element: <RequireAuth role="customer" />,
         children: [
@@ -65,8 +72,6 @@ export const router = createBrowserRouter([
     },
 
     // Vendor
-    { path: '/vendor/login', element: <Login role="vendor" /> },
-    { path: '/vendor/choose-account', element: <ChooseAccount role="vendor" /> },
     {
         element: <RequireAuth role="vendor" />,
         children: [
@@ -94,9 +99,23 @@ export const router = createBrowserRouter([
         ],
     },
 
+    // Branch Staff
+    {
+        element: <RequireAuth role="branch_staff" />,
+        children: [
+            {
+                path: '/staff',
+                element: <VendorLayout />,
+                children: [
+                    { index: true, element: <Navigate to="scanner" replace /> },
+                    { path: 'scanner', element: <Scanner basePath="/staff" /> },
+                    { path: 'wallet/:customerId', element: <UserWallet /> },
+                ],
+            },
+        ],
+    },
+
     // Admin
-    { path: '/admin/login', element: <Login role="admin" /> },
-    { path: '/admin/choose-account', element: <ChooseAccount role="admin" /> },
     {
         element: <RequireAuth role="admin" />,
         children: [
@@ -115,5 +134,5 @@ export const router = createBrowserRouter([
         ],
     },
 
-    { path: '*', element: <Navigate to="/customer/login" replace /> },
+    { path: '*', element: <Navigate to="/login" replace /> },
 ]);

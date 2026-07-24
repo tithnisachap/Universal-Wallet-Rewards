@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Avatar from '../../components/ui/Avatar';
+import Modal from '../../components/ui/Modal';
+import { Field, Input } from '../../components/ui/Field';
 import QueryState from '../../components/ui/QueryState';
 import { useCustomerProfile, useUpdateCustomerProfile } from '../../queries/customer';
 import { useLogout } from '../../queries/auth';
@@ -12,18 +15,29 @@ export default function Profile() {
     const logout = useLogout();
     const { data: customer, isLoading, isError, error, refetch } = useCustomerProfile();
     const updateProfile = useUpdateCustomerProfile();
+    const [isEditing, setIsEditing] = useState(false);
+    const [name, setName] = useState('');
 
     function handleLogout() {
         logout.mutate(undefined, {
-            onSettled: () => navigate('/customer/login'),
+            onSettled: () => navigate('/login'),
         });
     }
 
-    function handleEdit() {
-        const name = window.prompt('Update your full name', customer?.name);
-        if (name && name.trim()) {
-            updateProfile.mutate({ name: name.trim() });
-        }
+    function openEdit() {
+        setName(customer?.name ?? '');
+        setIsEditing(true);
+    }
+
+    function handleSave(e) {
+        e.preventDefault();
+        const trimmed = name.trim();
+        if (!trimmed) return;
+
+        updateProfile.mutate(
+            { name: trimmed },
+            { onSuccess: () => setIsEditing(false) },
+        );
     }
 
     return (
@@ -63,12 +77,8 @@ export default function Profile() {
                             </div>
                         </dl>
 
-                        {updateProfile.isError ? (
-                            <p className="mt-2 text-sm text-danger-500">{updateProfile.error.message}</p>
-                        ) : null}
-
-                        <Button variant="outline" className="mt-2" onClick={handleEdit} disabled={updateProfile.isPending}>
-                            {updateProfile.isPending ? 'Saving...' : 'Edit Profile'}
+                        <Button variant="outline" className="mt-2" onClick={openEdit}>
+                            Edit Profile
                         </Button>
                     </Card>
                 ) : null}
@@ -79,6 +89,22 @@ export default function Profile() {
                     Log Out
                 </Button>
             </Card>
+
+            <Modal open={isEditing} onClose={() => setIsEditing(false)} title="Edit Profile">
+                <form onSubmit={handleSave} className="space-y-4">
+                    <Field label="Full Name">
+                        <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus required />
+                    </Field>
+
+                    {updateProfile.isError ? (
+                        <p className="text-sm text-danger-500">{updateProfile.error.message}</p>
+                    ) : null}
+
+                    <Button type="submit" disabled={updateProfile.isPending || !name.trim()}>
+                        {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                </form>
+            </Modal>
         </div>
     );
 }
