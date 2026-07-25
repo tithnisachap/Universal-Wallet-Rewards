@@ -16,6 +16,18 @@ class UpdateVendorProfileRequest extends FormRequest
     }
 
     /**
+     * Older/seeded records may have a website stored without a scheme
+     * (e.g. "www.example.com"), which the `url` rule below would otherwise
+     * reject even when the vendor hasn't touched that field.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('website') && ! preg_match('#^https?://#i', $this->input('website'))) {
+            $this->merge(['website' => 'https://'.$this->input('website')]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>

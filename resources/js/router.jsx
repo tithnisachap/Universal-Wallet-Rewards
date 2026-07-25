@@ -21,6 +21,7 @@ import CustomerProfile from './pages/customer/Profile';
 import VendorLayout from './layouts/VendorLayout';
 import VendorDashboard from './pages/vendor/Dashboard';
 import VendorProfile from './pages/vendor/Profile';
+import VendorEditProfile from './pages/vendor/EditProfile';
 import ShopSetup from './pages/vendor/ShopSetup';
 import Promotions from './pages/vendor/Promotions';
 import CreatePromotion from './pages/vendor/CreatePromotion';
@@ -83,6 +84,7 @@ export const router = createBrowserRouter([
                     { path: 'dashboard', element: <VendorDashboard /> },
                     { path: 'shop-setup', element: <ShopSetup /> },
                     { path: 'profile', element: <VendorProfile /> },
+                    { path: 'profile/edit', element: <VendorEditProfile /> },
                     { path: 'promotions', element: <Promotions /> },
                     { path: 'promotions/create', element: <CreatePromotion /> },
                     { path: 'promotions/:promotionId/edit', element: <EditPromotion /> },

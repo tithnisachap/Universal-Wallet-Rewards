@@ -1,4 +1,4 @@
-import { AlertTriangle, LogOut } from 'lucide-react';
+import { AlertTriangle, LogOut, Pencil } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
@@ -113,7 +113,17 @@ export default function Profile() {
 
     return (
         <div>
-            <PageHeader title="Profile" />
+            <PageHeader
+                title="Profile"
+                right={
+                    <Link
+                        to="/vendor/profile/edit"
+                        className="flex items-center gap-1 text-sm font-semibold text-brand-600"
+                    >
+                        <Pencil size={14} /> Edit
+                    </Link>
+                }
+            />
             <div className="space-y-4 px-4 py-4">
                 <Card>
                     <div className="flex items-center gap-3">

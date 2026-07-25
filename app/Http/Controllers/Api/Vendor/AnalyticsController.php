@@ -11,15 +11,37 @@ use Illuminate\Support\Carbon;
 
 class AnalyticsController extends Controller
 {
+    /**
+     * Supported duration presets. Short ranges are bucketed by day; the
+     * multi-year ranges are bucketed by month so the response stays a
+     * reasonable size and the chart stays readable.
+     */
+    private const RANGES = [
+        '7d' => ['unit' => 'day', 'count' => 7],
+        '30d' => ['unit' => 'day', 'count' => 30],
+        '2y' => ['unit' => 'month', 'count' => 24],
+        '5y' => ['unit' => 'month', 'count' => 60],
+        '10y' => ['unit' => 'month', 'count' => 120],
+    ];
+
     public function show(Request $request)
     {
         $vendor = $request->user()->vendor;
 
         abort_if(! $vendor, 404, 'No shop has been set up yet.');
 
-        $days = min(90, max(1, $request->integer('days', 7)));
-        $from = Carbon::now()->subDays($days - 1)->startOfDay();
-        $previousFrom = $from->copy()->subDays($days);
+        $range = $request->string('range', '7d')->toString();
+        $config = self::RANGES[$range] ?? self::RANGES['7d'];
+        $unit = $config['unit'];
+        $count = $config['count'];
+
+        if ($unit === 'day') {
+            $from = Carbon::now()->subDays($count - 1)->startOfDay();
+            $previousFrom = $from->copy()->subDays($count);
+        } else {
+            $from = Carbon::now()->subMonthsNoOverflow($count - 1)->startOfMonth();
+            $previousFrom = $from->copy()->subMonthsNoOverflow($count);
+        }
 
         $activities = CustomerActivity::where('vendor_id', $vendor->id)
             ->where('occurred_at', '>=', $from)
@@ -32,17 +54,28 @@ class AnalyticsController extends Controller
         $totalCustomers = $activities->pluck('customer_id')->unique()->count();
         $previousCustomers = $previousActivities->pluck('customer_id')->unique()->count();
 
-        $dailySeries = collect(range(0, $days - 1))->map(function (int $offset) use ($from, $activities) {
-            $day = $from->copy()->addDays($offset);
-            $dayActivities = $activities->filter(fn (CustomerActivity $a) => Carbon::parse($a->occurred_at)->isSameDay($day));
+        $dailySeries = collect(range(0, $count - 1))->map(function (int $offset) use ($from, $activities, $unit) {
+            if ($unit === 'day') {
+                $periodStart = $from->copy()->addDays($offset);
+                $label = $periodStart->format('M j');
+                $periodActivities = $activities->filter(
+                    fn (CustomerActivity $a) => Carbon::parse($a->occurred_at)->isSameDay($periodStart)
+                );
+            } else {
+                $periodStart = $from->copy()->addMonthsNoOverflow($offset);
+                $label = $periodStart->format('M Y');
+                $periodActivities = $activities->filter(
+                    fn (CustomerActivity $a) => Carbon::parse($a->occurred_at)->format('Y-m') === $periodStart->format('Y-m')
+                );
+            }
 
             return [
-                'label' => $day->format('M j'),
-                'customers' => $dayActivities->pluck('customer_id')->unique()->count(),
-                'points_added' => (int) $dayActivities->where('type', 'points_earned')->sum('amount'),
-                'points_deducted' => (int) abs($dayActivities->where('type', 'points_deducted')->sum('amount')),
-                'stamps_added' => (int) $dayActivities->where('type', 'stamp_earned')->sum('amount'),
-                'stamps_redeemed' => (int) $dayActivities->where('type', 'reward_redeemed')->count(),
+                'label' => $label,
+                'customers' => $periodActivities->pluck('customer_id')->unique()->count(),
+                'points_added' => (int) $periodActivities->where('type', 'points_earned')->sum('amount'),
+                'points_deducted' => (int) abs($periodActivities->where('type', 'points_deducted')->sum('amount')),
+                'stamps_added' => (int) $periodActivities->where('type', 'stamp_earned')->sum('amount'),
+                'stamps_redeemed' => (int) $periodActivities->where('type', 'reward_redeemed')->count(),
             ];
         })->values();
 
@@ -73,7 +106,7 @@ class AnalyticsController extends Controller
 
         return response()->json([
             'data' => [
-                'period_days' => $days,
+                'range' => $range,
                 'customers' => [
                     'total' => $totalCustomers,
                     'change_pct' => $this->percentChange($previousCustomers, $totalCustomers),

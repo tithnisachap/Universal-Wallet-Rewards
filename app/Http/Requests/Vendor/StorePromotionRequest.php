@@ -31,7 +31,12 @@ class StorePromotionRequest extends FormRequest
             'title' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string', 'max:120'],
             'terms' => ['nullable', 'string', 'max:1000'],
-            'required_amount' => ['required', 'integer', 'min:1'],
+            'required_amount' => [
+                'required', 'integer', 'min:1',
+                // Stamp cards are physically limited to 30 slots in the UI —
+                // points-based promotions have no such constraint.
+                $this->input('type') === 'stamps' ? 'max:30' : 'max:1000000',
+            ],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['required', 'date', 'after_or_equal:starts_at'],
             'is_active' => ['sometimes', 'boolean'],
@@ -45,6 +50,7 @@ class StorePromotionRequest extends FormRequest
     {
         return [
             'ends_at.after_or_equal' => 'The end date must be on or after the start date.',
+            'required_amount.max' => 'Required stamps cannot exceed 30.',
         ];
     }
 

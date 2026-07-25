@@ -206,9 +206,9 @@ export function useVendorActivityLog(filters = {}) {
     });
 }
 
-export function useVendorAnalytics(days = 7) {
+export function useVendorAnalytics(range = '7d') {
     return useQuery({
-        queryKey: ['vendor', 'analytics', { days }],
-        queryFn: () => api.get('/vendor/analytics', { params: { days } }),
+        queryKey: ['vendor', 'analytics', { range }],
+        queryFn: () => api.get('/vendor/analytics', { params: { range } }),
     });
 }

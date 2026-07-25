@@ -7,30 +7,48 @@ import { SegmentedControl } from '../../components/ui/Tabs';
 import { Select } from '../../components/ui/Field';
 import { useVendorAnalytics } from '../../queries/vendor';
 
+const RANGE_OPTIONS = [
+    { value: '7d', label: 'Last 7 Days' },
+    { value: '30d', label: 'Last 30 Days' },
+    { value: '2y', label: 'Past 2 Years' },
+    { value: '5y', label: 'Past 5 Years' },
+    { value: '10y', label: 'Past 10 Years' },
+];
+
 export default function Analytics() {
     const [tab, setTab] = useState('customers');
-    const [days, setDays] = useState(7);
-    const { data: analytics, isLoading, isError, error, refetch } = useVendorAnalytics(days);
+    const [range, setRange] = useState('7d');
+    const { data: analytics, isLoading, isError, error, refetch } = useVendorAnalytics(range);
 
     return (
         <div>
             <PageHeader title="Analytics" />
             <div className="px-4 py-4">
-                <SegmentedControl
-                    options={[
-                        { value: 'customers', label: 'Total Customer' },
-                        { value: 'redemption', label: 'Redemption' },
-                    ]}
-                    value={tab}
-                    onChange={setTab}
-                />
+                <div className="flex items-center justify-between gap-3">
+                    <SegmentedControl
+                        className="flex-1"
+                        options={[
+                            { value: 'customers', label: 'Total Customer' },
+                            { value: 'redemption', label: 'Redemption' },
+                        ]}
+                        value={tab}
+                        onChange={setTab}
+                    />
+                    <Select compact value={range} onChange={(e) => setRange(e.target.value)}>
+                        {RANGE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </Select>
+                </div>
 
                 <QueryState isLoading={isLoading} isError={isError} error={error} onRetry={refetch}>
                     {analytics ? (
                         tab === 'customers' ? (
-                            <CustomerAnalytics data={analytics.customers} days={days} onDaysChange={setDays} />
+                            <CustomerAnalytics data={analytics.customers} />
                         ) : (
-                            <RedemptionAnalytics data={analytics.redemption} days={days} onDaysChange={setDays} />
+                            <RedemptionAnalytics data={analytics.redemption} />
                         )
                     ) : null}
                 </QueryState>
@@ -39,22 +57,16 @@ export default function Analytics() {
     );
 }
 
-function CustomerAnalytics({ data, days, onDaysChange }) {
+function CustomerAnalytics({ data }) {
     const customerGrowth = data.daily_series.map((d) => ({ label: d.label, value: d.customers }));
     const pointsTransactions = data.daily_series.map((d) => ({ label: d.label, added: d.points_added, deducted: d.points_deducted }));
     const stampsTransactions = data.daily_series.map((d) => ({ label: d.label, added: d.stamps_added, redeemed: d.stamps_redeemed }));
 
     return (
         <div className="mt-4 space-y-4">
-            <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase text-gray-400">Total Customers</p>
-                <Select compact value={days} onChange={(e) => onDaysChange(Number(e.target.value))}>
-                    <option value={7}>Last 7 Days</option>
-                    <option value={30}>Last 30 Days</option>
-                </Select>
-            </div>
             <div>
-                <p className="text-3xl font-bold text-gray-900">{data.total.toLocaleString()}</p>
+                <p className="text-xs font-semibold uppercase text-gray-400">Total Customers</p>
+                <p className="mt-1 text-3xl font-bold text-gray-900">{data.total.toLocaleString()}</p>
                 <p className="text-sm font-medium text-success-500">
                     {data.change_pct >= 0 ? '↑' : '↓'} {Math.abs(data.change_pct)}% vs previous period
                 </p>
@@ -114,7 +126,7 @@ function CustomerAnalytics({ data, days, onDaysChange }) {
     );
 }
 
-function RedemptionAnalytics({ data, days, onDaysChange }) {
+function RedemptionAnalytics({ data }) {
     return (
         <div className="mt-4 space-y-4">
             <div>
@@ -145,13 +157,6 @@ function RedemptionAnalytics({ data, days, onDaysChange }) {
                         ))}
                     </Card>
                 )}
-            </div>
-
-            <div className="flex justify-end">
-                <Select compact value={days} onChange={(e) => onDaysChange(Number(e.target.value))}>
-                    <option value={7}>This Week</option>
-                    <option value={30}>This Month</option>
-                </Select>
             </div>
 
             <div>

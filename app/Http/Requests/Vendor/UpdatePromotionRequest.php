@@ -25,15 +25,32 @@ class UpdatePromotionRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Type is immutable once a promotion exists, so the cap check looks
+        // at the existing record's type rather than request input.
+        $isStamps = $this->route('promotion')?->type === 'stamps';
+
         return [
             'category' => ['sometimes', 'required', 'string', 'max:100'],
             'title' => ['sometimes', 'required', 'string', 'max:50'],
             'description' => ['nullable', 'string', 'max:120'],
             'terms' => ['nullable', 'string', 'max:1000'],
-            'required_amount' => ['sometimes', 'required', 'integer', 'min:1'],
+            'required_amount' => [
+                'sometimes', 'required', 'integer', 'min:1',
+                $isStamps ? 'max:30' : 'max:1000000',
+            ],
             'starts_at' => ['sometimes', 'required', 'date'],
             'ends_at' => ['sometimes', 'required', 'date', 'after_or_equal:starts_at'],
             'is_active' => ['sometimes', 'boolean'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function messages(): array
+    {
+        return [
+            'required_amount.max' => 'Required stamps cannot exceed 30.',
         ];
     }
 

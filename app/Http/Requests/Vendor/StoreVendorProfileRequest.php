@@ -16,6 +16,17 @@ class StoreVendorProfileRequest extends FormRequest
     }
 
     /**
+     * Accept a website typed without a scheme (e.g. "www.example.com")
+     * rather than rejecting it outright.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('website') && ! preg_match('#^https?://#i', $this->input('website'))) {
+            $this->merge(['website' => 'https://'.$this->input('website')]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>

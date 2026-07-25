@@ -23,7 +23,7 @@ export default function PromotionForm({ value, onChange }) {
                 <div className="flex gap-2 rounded-xl bg-gray-100 p-1">
                     <button
                         type="button"
-                        onClick={() => set('type', 'stamps')}
+                        onClick={() => onChange({ ...value, type: 'stamps', amount: Math.min(30, value.amount) })}
                         className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold ${
                             value.type === 'stamps' ? 'bg-white text-brand-600 shadow-sm' : 'text-gray-500'
                         }`}
@@ -76,17 +76,38 @@ export default function PromotionForm({ value, onChange }) {
                     >
                         <Minus size={16} />
                     </button>
-                    <span className="text-2xl font-bold text-gray-900">{value.amount}</span>
+                    <input
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        max={value.type === 'stamps' ? 30 : undefined}
+                        value={value.amount}
+                        onChange={(e) => {
+                            const raw = Number(e.target.value) || 1;
+                            const clamped = value.type === 'stamps' ? Math.min(30, Math.max(1, raw)) : Math.max(1, raw);
+                            set('amount', clamped);
+                        }}
+                        className="w-20 border-none text-center text-2xl font-bold text-gray-900 [appearance:textfield] focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    />
                     <button
                         type="button"
-                        onClick={() => set('amount', value.amount + (value.type === 'stamps' ? 1 : 10))}
+                        onClick={() =>
+                            set(
+                                'amount',
+                                value.type === 'stamps'
+                                    ? Math.min(30, value.amount + 1)
+                                    : value.amount + 10,
+                            )
+                        }
                         className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white"
                     >
                         <Plus size={16} />
                     </button>
                 </div>
                 <p className="mt-1 text-xs text-gray-400">
-                    Set how many {value.type === 'stamps' ? 'stamps are' : 'points are'} needed to redeem this promotion.
+                    {value.type === 'stamps'
+                        ? 'Set how many stamps are needed to redeem this promotion (max 30).'
+                        : 'Set how many points are needed to redeem this promotion.'}
                 </p>
             </Field>
 

@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { Users, Store, Sparkles, Star } from 'lucide-react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
-import { PillTabs } from '../../components/ui/Tabs';
 import StatTile from '../../components/ui/StatTile';
 import Card from '../../components/ui/Card';
 import QueryState from '../../components/ui/QueryState';
+import { Select } from '../../components/ui/Field';
 import { useAdminAnalytics } from '../../queries/admin';
 
-const periods = [
+const PERIOD_OPTIONS = [
     { value: 'week', label: 'This Week' },
     { value: 'month', label: 'This Month' },
     { value: 'year', label: 'This Year' },
+    { value: '2y', label: 'Past 2 Years' },
+    { value: '5y', label: 'Past 5 Years' },
+    { value: '10y', label: 'Past 10 Years' },
 ];
 
 export default function Analytics() {
@@ -19,14 +22,16 @@ export default function Analytics() {
 
     return (
         <div className="px-4 py-4">
-            <h1 className="text-center text-xl font-bold text-gray-900">Analytics</h1>
-
-            <PillTabs
-                options={periods}
-                value={period}
-                onChange={setPeriod}
-                className="mt-4 justify-center rounded-xl bg-brand-50 p-1"
-            />
+            <div className="flex items-center justify-between">
+                <h1 className="text-xl font-bold text-gray-900">Analytics</h1>
+                <Select compact value={period} onChange={(e) => setPeriod(e.target.value)}>
+                    {PERIOD_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </Select>
+            </div>
 
             <QueryState isLoading={isLoading} isError={isError} error={error} onRetry={refetch}>
                 {a ? (

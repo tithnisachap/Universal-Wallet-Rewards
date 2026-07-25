@@ -24,12 +24,12 @@ class VendorController extends Controller
         $query = Vendor::query()->with(['user:id,name,email', 'reviewer:id,name']);
 
         if ($status === 'history') {
-            $query->whereIn('status', ['approved', 'rejected']);
+            $query->whereIn('status', ['approved', 'rejected'])->orderByDesc('reviewed_at');
         } else {
-            $query->where('status', $status);
+            $query->where('status', $status)->orderByDesc('submitted_at');
         }
 
-        $vendors = $query->orderByDesc('submitted_at')->paginate($request->integer('per_page', 20));
+        $vendors = $query->paginate($request->integer('per_page', 20));
 
         return VendorResource::collection($vendors);
     }

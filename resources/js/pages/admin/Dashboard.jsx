@@ -41,8 +41,6 @@ function DashboardContent({ overview: o }) {
                 <div className="grid grid-cols-2 gap-3">
                     <OverviewTile label="Total vendors" value={o.today.total_vendors} />
                     <OverviewTile label="Pending Approvals" value={o.today.pending_approvals} />
-                    <OverviewTile label="Stamps Redeemed" value={o.today.stamps_redeemed.toLocaleString()} />
-                    <OverviewTile label="Suspended Vendors" value={o.today.suspended_vendors} />
                 </div>
             </div>
 

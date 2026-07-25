@@ -115,7 +115,14 @@ export default function UserWallet() {
                                             <div className="flex items-center justify-between">
                                                 <RoundButton onClick={() => setStampsToAdd((v) => Math.max(1, v - 1))} icon={Minus} />
                                                 <div className="text-center">
-                                                    <p className="text-2xl font-bold text-gray-900">{stampsToAdd}</p>
+                                                    <input
+                                                        type="number"
+                                                        inputMode="numeric"
+                                                        min={1}
+                                                        value={stampsToAdd}
+                                                        onChange={(e) => setStampsToAdd(Math.max(1, Number(e.target.value) || 1))}
+                                                        className="w-16 border-none text-center text-2xl font-bold text-gray-900 [appearance:textfield] focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                    />
                                                     <p className="text-xs text-gray-400">Stamps</p>
                                                 </div>
                                                 <RoundButton onClick={() => setStampsToAdd((v) => v + 1)} icon={Plus} filled />
@@ -141,7 +148,14 @@ export default function UserWallet() {
                                         <div className="flex items-center justify-between">
                                             <RoundButton onClick={() => setPointsToAdd((v) => Math.max(0, v - 10))} icon={Minus} />
                                             <div className="text-center">
-                                                <p className="text-2xl font-bold text-gray-900">{pointsToAdd}</p>
+                                                <input
+                                                    type="number"
+                                                    inputMode="numeric"
+                                                    min={0}
+                                                    value={pointsToAdd}
+                                                    onChange={(e) => setPointsToAdd(Math.max(0, Number(e.target.value) || 0))}
+                                                    className="w-20 border-none text-center text-2xl font-bold text-gray-900 [appearance:textfield] focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                />
                                                 <p className="text-xs text-gray-400">Manual Entry</p>
                                             </div>
                                             <RoundButton onClick={() => setPointsToAdd((v) => v + 10)} icon={Plus} filled />
@@ -176,7 +190,14 @@ export default function UserWallet() {
                                         <div className="flex items-center justify-between">
                                             <RoundButton onClick={() => setPointsToDeduct((v) => Math.max(0, v - 10))} icon={Minus} danger />
                                             <div className="text-center">
-                                                <p className="text-2xl font-bold text-danger-500">{pointsToDeduct}</p>
+                                                <input
+                                                    type="number"
+                                                    inputMode="numeric"
+                                                    min={0}
+                                                    value={pointsToDeduct}
+                                                    onChange={(e) => setPointsToDeduct(Math.max(0, Number(e.target.value) || 0))}
+                                                    className="w-20 border-none text-center text-2xl font-bold text-danger-500 [appearance:textfield] focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                />
                                                 <p className="text-xs text-gray-400">Points</p>
                                             </div>
                                             <RoundButton onClick={() => setPointsToDeduct((v) => v + 10)} icon={Plus} danger />

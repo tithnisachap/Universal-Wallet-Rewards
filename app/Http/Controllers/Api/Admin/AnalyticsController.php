@@ -15,6 +15,9 @@ class AnalyticsController extends Controller
         'week' => 7,
         'month' => 30,
         'year' => 365,
+        '2y' => 730,
+        '5y' => 1825,
+        '10y' => 3650,
     ];
 
     public function show(Request $request)
@@ -63,7 +66,9 @@ class AnalyticsController extends Controller
             $end = $start->copy()->addDays($bucketSizeDays)->subSecond();
 
             return [
-                'label' => $start->format('M j'),
+                // Buckets spanning a month or more read better labeled by
+                // month/year than by their (somewhat arbitrary) start day.
+                'label' => $bucketSizeDays >= 28 ? $start->format('M Y') : $start->format('M j'),
                 'value' => $counter($start, $end),
             ];
         })->values();
