@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, Map } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/ui/PageHeader';
 import { Field, Input, Select } from '../../components/ui/Field';
 import Button from '../../components/ui/Button';
+import LocationPicker from '../../components/LocationPicker';
 import QueryState from '../../components/ui/QueryState';
 import { useCreateBranch, useUpdateBranch, useVendorBranch } from '../../queries/vendor';
 
@@ -18,13 +19,14 @@ export default function AddEditBranch() {
     const mutation = editing ? updateBranch : createBranch;
 
     const [photoName, setPhotoName] = useState('');
+    const [location, setLocation] = useState(null);
+    const [locationError, setLocationError] = useState(false);
     const photoInputRef = useRef(null);
     const formRef = useRef(null);
 
     useEffect(() => {
         if (branch && formRef.current) {
             formRef.current.name.value = branch.name;
-            formRef.current.address.value = branch.address;
             if (branch.phone) formRef.current.phone_number.value = branch.phone;
             formRef.current.mon_fri_open.value = branch.opening_hours?.mon_fri?.open ?? '09:00';
             formRef.current.mon_fri_close.value = branch.opening_hours?.mon_fri?.close ?? '21:00';
@@ -35,11 +37,21 @@ export default function AddEditBranch() {
 
     function handleSubmit(e) {
         e.preventDefault();
+
+        if (!editing && !location) {
+            setLocationError(true);
+            return;
+        }
+        setLocationError(false);
+
         const form = new FormData(e.target);
 
         const payload = new FormData();
         payload.set('name', form.get('name'));
-        payload.set('address', form.get('address'));
+        if (location) {
+            payload.set('latitude', location.latitude);
+            payload.set('longitude', location.longitude);
+        }
         if (form.get('phone_number')) {
             payload.set('phone', `${form.get('phone_code')} ${form.get('phone_number')}`);
         }
@@ -97,11 +109,20 @@ export default function AddEditBranch() {
                     <Input name="name" placeholder="e.g. Green Valley - Central Mall" required />
                 </Field>
 
-                <Field label="Address">
-                    <div className="relative">
-                        <Input name="address" placeholder="Enter full street address" className="pr-11" required />
-                        <Map size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-600" />
-                    </div>
+                <Field
+                    label="Location"
+                    hint={editing ? "Leave untouched to keep the branch's current location" : undefined}
+                >
+                    {editing && branch?.address ? (
+                        <p className="mb-2 text-sm text-gray-500">Current: {branch.address}</p>
+                    ) : null}
+                    <LocationPicker
+                        initialValue={editing && branch ? { latitude: Number(branch.latitude), longitude: Number(branch.longitude) } : undefined}
+                        onChange={setLocation}
+                    />
+                    {locationError ? (
+                        <p className="mt-1 text-sm text-danger-500">Tap the map or search to set this branch's location.</p>
+                    ) : null}
                 </Field>
 
                 <Field label="Phone Number">

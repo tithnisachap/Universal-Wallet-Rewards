@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Vendor\AnalyticsController as VendorAnalyticsContro
 use App\Http\Controllers\Api\Vendor\BranchController as VendorBranchController;
 use App\Http\Controllers\Api\Vendor\BranchStaffController;
 use App\Http\Controllers\Api\Vendor\DashboardController as VendorDashboardController;
+use App\Http\Controllers\Api\Vendor\GeocodeController;
 use App\Http\Controllers\Api\Vendor\PointTransactionController;
 use App\Http\Controllers\Api\Vendor\ProfileController as VendorProfileController;
 use App\Http\Controllers\Api\Vendor\PromotionController as VendorPromotionController;
@@ -82,6 +83,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/promotions/{promotion}', [VendorPromotionController::class, 'update']);
 
         Route::get('/analytics', [VendorAnalyticsController::class, 'show']);
+
+        Route::get('/geocode/search', [GeocodeController::class, 'search']);
+        Route::get('/geocode/reverse', [GeocodeController::class, 'reverse']);
     });
 
     // ---- Vendor (owner or branch-scoped staff) -------------------------------

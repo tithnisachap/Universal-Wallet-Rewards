@@ -8,11 +8,14 @@ use App\Http\Requests\Vendor\UpdateVendorProfileRequest;
 use App\Http\Resources\VendorResource;
 use App\Models\PlatformSetting;
 use App\Models\Vendor;
+use App\Services\NominatimGeocoder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
+    public function __construct(private readonly NominatimGeocoder $geocoder) {}
+
     public function show(Request $request)
     {
         $vendor = $request->user()->vendor;
@@ -39,7 +42,14 @@ class ProfileController extends Controller
 
         $autoApprove = PlatformSetting::current()->auto_approve_vendors;
 
-        $vendor = DB::transaction(function () use ($request, $logoPath, $autoApprove) {
+        // Reverse-geocode before opening a transaction — it's an outbound
+        // HTTP call, which shouldn't happen while holding one open.
+        $address = $this->geocoder->reverseGeocode(
+            $request->validated('latitude'),
+            $request->validated('longitude'),
+        );
+
+        $vendor = DB::transaction(function () use ($request, $logoPath, $autoApprove, $address) {
             $vendor = Vendor::create([
                 'user_id' => $request->user()->id,
                 'business_name' => $request->validated('business_name'),
@@ -47,7 +57,7 @@ class ProfileController extends Controller
                 'logo_path' => $logoPath,
                 'phone' => $request->validated('phone'),
                 'email' => $request->user()->email,
-                'address' => $request->validated('address'),
+                'address' => $address,
                 'website' => $request->validated('website'),
                 'status' => $autoApprove ? 'approved' : 'pending',
                 'submitted_at' => now(),
@@ -57,9 +67,11 @@ class ProfileController extends Controller
 
             $vendor->branches()->create([
                 'name' => $request->validated('business_name'),
-                'address' => $request->validated('address'),
+                'address' => $address,
                 'phone' => $request->validated('phone'),
                 'photo_path' => $logoPath,
+                'latitude' => $request->validated('latitude'),
+                'longitude' => $request->validated('longitude'),
                 'is_main' => true,
             ]);
 

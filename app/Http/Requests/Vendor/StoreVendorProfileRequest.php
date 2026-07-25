@@ -27,7 +27,8 @@ class StoreVendorProfileRequest extends FormRequest
             'business_name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'address' => ['required', 'string', 'max:255'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
             'website' => ['nullable', 'url', 'max:255'],
         ];
     }

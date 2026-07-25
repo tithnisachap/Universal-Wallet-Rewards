@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Coffee, UtensilsCrossed, ShoppingBag, MapPin, MapPinOff } from 'lucide-react';
+import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import SearchInput from '../../components/ui/SearchInput';
 import Chip from '../../components/ui/Chip';
 import Card from '../../components/ui/Card';
@@ -16,6 +18,31 @@ const categories = [
     { value: 'Restaurant', label: 'Dining', icon: UtensilsCrossed },
     { value: 'Retail', label: 'Retail', icon: ShoppingBag },
 ];
+
+const youAreHereIcon = L.divIcon({
+    className: '',
+    html: '<div class="flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 shadow-lg ring-4 ring-white"><div class="h-3 w-3 rounded-full bg-white"></div></div>',
+    iconSize: [56, 56],
+    iconAnchor: [28, 28],
+});
+
+const branchIcon = L.divIcon({
+    className: '',
+    html: '<div class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 shadow-md ring-2 ring-white"></div>',
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+});
+
+function RecenterMap({ center }) {
+    const map = useMap();
+
+    useEffect(() => {
+        map.setView(center, map.getZoom());
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [center.lat, center.lng]);
+
+    return null;
+}
 
 export default function Location() {
     const [category, setCategory] = useState('Coffee Shop');
@@ -39,30 +66,35 @@ export default function Location() {
 
     return (
         <div className="flex h-screen flex-col">
-            <div className="relative h-72 shrink-0 overflow-hidden bg-gradient-to-br from-emerald-100 via-sky-100 to-emerald-50">
-                <div className="absolute inset-x-4 top-4 z-10">
-                    <SearchInput placeholder="Search nearby stores" className="shadow-md" />
-                    <div className="mt-3 flex gap-2">
-                        {categories.map((cat) => (
-                            <Chip key={cat.value} icon={cat.icon} active={category === cat.value} onClick={() => setCategory(cat.value)}>
-                                {cat.label}
-                            </Chip>
-                        ))}
-                    </div>
-                </div>
+            <div className="relative h-72 shrink-0 overflow-hidden">
+                <MapContainer center={coords} zoom={14} className="h-full w-full" zoomControl={false}>
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <RecenterMap center={coords} />
+                    <Marker position={coords} icon={youAreHereIcon} />
+                    {branches?.map((branch) => (
+                        <Marker
+                            key={branch.id}
+                            position={[Number(branch.latitude), Number(branch.longitude)]}
+                            icon={branchIcon}
+                        />
+                    ))}
+                </MapContainer>
 
-                <div className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg">
-                    <MapPin size={22} />
-                </div>
-                {branches?.slice(0, 4).map((branch, i) => (
-                    <div
-                        key={branch.id}
-                        className="absolute flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white shadow-md"
-                        style={{ left: `${30 + i * 15}%`, top: `${35 + (i % 2) * 20}%` }}
-                    >
-                        <Coffee size={16} />
+                <div className="pointer-events-none absolute inset-x-4 top-4 z-[1001]">
+                    <div className="pointer-events-auto">
+                        <SearchInput placeholder="Search nearby stores" className="shadow-md" />
+                        <div className="mt-3 flex gap-2">
+                            {categories.map((cat) => (
+                                <Chip key={cat.value} icon={cat.icon} active={category === cat.value} onClick={() => setCategory(cat.value)}>
+                                    {cat.label}
+                                </Chip>
+                            ))}
+                        </div>
                     </div>
-                ))}
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto rounded-t-3xl bg-white px-4 pb-24 pt-5 shadow-[0_-8px_20px_rgba(0,0,0,0.05)]">

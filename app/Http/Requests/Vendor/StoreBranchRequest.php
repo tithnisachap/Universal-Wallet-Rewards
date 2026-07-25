@@ -25,15 +25,14 @@ class StoreBranchRequest extends FormRequest
         return [
             'photo' => ['nullable', 'image', 'max:5120'],
             'name' => ['required', 'string', 'max:255'],
-            'address' => ['required', 'string', 'max:255'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
             'phone' => ['nullable', 'string', 'max:30'],
             'opening_hours' => ['nullable', 'array'],
             'opening_hours.mon_fri.open' => ['nullable', 'date_format:H:i'],
             'opening_hours.mon_fri.close' => ['nullable', 'date_format:H:i'],
             'opening_hours.sat_sun.open' => ['nullable', 'date_format:H:i'],
             'opening_hours.sat_sun.close' => ['nullable', 'date_format:H:i'],
-            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'is_main' => ['sometimes', 'boolean'],
         ];
     }

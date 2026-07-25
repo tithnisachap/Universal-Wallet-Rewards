@@ -7,11 +7,14 @@ use App\Http\Requests\Vendor\StoreBranchRequest;
 use App\Http\Requests\Vendor\UpdateBranchRequest;
 use App\Http\Resources\BranchResource;
 use App\Models\Branch;
+use App\Services\NominatimGeocoder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class BranchController extends Controller
 {
+    public function __construct(private readonly NominatimGeocoder $geocoder) {}
+
     public function index(Request $request)
     {
         $vendor = $request->user()->vendor;
@@ -28,8 +31,12 @@ class BranchController extends Controller
         $this->authorize('create', Branch::class);
 
         $vendor = $request->user()->vendor;
+        $address = $this->geocoder->reverseGeocode(
+            $request->validated('latitude'),
+            $request->validated('longitude'),
+        );
 
-        $branch = DB::transaction(function () use ($request, $vendor) {
+        $branch = DB::transaction(function () use ($request, $vendor, $address) {
             if ($request->boolean('is_main')) {
                 $vendor->branches()->where('is_main', true)->update(['is_main' => false]);
             }
@@ -40,6 +47,7 @@ class BranchController extends Controller
 
             return $vendor->branches()->create([
                 ...$request->safe()->except(['photo', 'is_main']),
+                'address' => $address,
                 'photo_path' => $photoPath,
                 'is_main' => $request->boolean('is_main') || ! $vendor->branches()->exists(),
             ]);
@@ -59,7 +67,13 @@ class BranchController extends Controller
     {
         $this->authorize('update', $branch);
 
-        DB::transaction(function () use ($request, $branch) {
+        // Optional on update — editing hours/phone shouldn't force moving
+        // the pin when the location hasn't changed.
+        $address = $request->filled('latitude')
+            ? $this->geocoder->reverseGeocode($request->validated('latitude'), $request->validated('longitude'))
+            : null;
+
+        DB::transaction(function () use ($request, $branch, $address) {
             if ($request->boolean('is_main')) {
                 $branch->vendor->branches()->where('id', '!=', $branch->id)->where('is_main', true)->update(['is_main' => false]);
             }
@@ -69,6 +83,11 @@ class BranchController extends Controller
             }
 
             $branch->fill($request->safe()->except('photo'));
+
+            if ($address) {
+                $branch->address = $address;
+            }
+
             $branch->save();
         });
 

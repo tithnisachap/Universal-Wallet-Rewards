@@ -25,15 +25,17 @@ class UpdateBranchRequest extends FormRequest
         return [
             'photo' => ['nullable', 'image', 'max:5120'],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'address' => ['sometimes', 'required', 'string', 'max:255'],
+            // Optional here — unlike creation, editing other fields
+            // shouldn't force moving the pin when the location hasn't
+            // changed. When given, both must arrive together.
+            'latitude' => ['sometimes', 'required_with:longitude', 'numeric', 'between:-90,90'],
+            'longitude' => ['sometimes', 'required_with:latitude', 'numeric', 'between:-180,180'],
             'phone' => ['nullable', 'string', 'max:30'],
             'opening_hours' => ['nullable', 'array'],
             'opening_hours.mon_fri.open' => ['nullable', 'date_format:H:i'],
             'opening_hours.mon_fri.close' => ['nullable', 'date_format:H:i'],
             'opening_hours.sat_sun.open' => ['nullable', 'date_format:H:i'],
             'opening_hours.sat_sun.close' => ['nullable', 'date_format:H:i'],
-            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'is_main' => ['sometimes', 'boolean'],
         ];
     }

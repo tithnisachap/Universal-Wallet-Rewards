@@ -2,19 +2,29 @@ import { useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/ui/PageHeader';
-import { Field, Input, Select, Textarea } from '../../components/ui/Field';
+import { Field, Input, Select } from '../../components/ui/Field';
 import Button from '../../components/ui/Button';
+import LocationPicker from '../../components/LocationPicker';
 import { useCreateVendorProfile } from '../../queries/vendor';
 
 export default function ShopSetup() {
     const [submitted, setSubmitted] = useState(false);
     const [logoName, setLogoName] = useState('');
+    const [location, setLocation] = useState(null);
+    const [locationError, setLocationError] = useState(false);
     const logoInputRef = useRef(null);
     const navigate = useNavigate();
     const createProfile = useCreateVendorProfile();
 
     function handleSubmit(e) {
         e.preventDefault();
+
+        if (!location) {
+            setLocationError(true);
+            return;
+        }
+        setLocationError(false);
+
         const form = new FormData(e.target);
 
         const phoneCode = form.get('phone_code');
@@ -23,7 +33,8 @@ export default function ShopSetup() {
         payload.set('business_name', form.get('business_name'));
         payload.set('category', form.get('category'));
         if (phoneNumber) payload.set('phone', `${phoneCode} ${phoneNumber}`);
-        payload.set('address', form.get('address'));
+        payload.set('latitude', location.latitude);
+        payload.set('longitude', location.longitude);
         if (form.get('website')) payload.set('website', form.get('website'));
         if (logoInputRef.current?.files[0]) payload.set('logo', logoInputRef.current.files[0]);
 
@@ -105,8 +116,11 @@ export default function ShopSetup() {
                     </Field>
                 </div>
 
-                <Field label="Address">
-                    <Textarea name="address" placeholder="Enter business address" required />
+                <Field label="Location">
+                    <LocationPicker onChange={setLocation} />
+                    {locationError ? (
+                        <p className="mt-1 text-sm text-danger-500">Tap the map or search to set your shop's location.</p>
+                    ) : null}
                 </Field>
 
                 <Field label="Website (Optional)">
