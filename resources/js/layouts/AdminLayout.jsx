@@ -1,12 +1,12 @@
 import { Outlet } from 'react-router-dom';
-import { Home, Store, BarChart3, Menu } from 'lucide-react';
+import { Home, Store, BarChart3, User } from 'lucide-react';
 import BottomNav from '../components/ui/BottomNav';
 
 const navItems = [
     { to: '/admin/dashboard', label: 'Home', icon: Home, end: true },
     { to: '/admin/vendors', label: 'Vendors', icon: Store },
     { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-    { to: '/admin/more', label: 'More', icon: Menu },
+    { to: '/admin/profile', label: 'Profile', icon: User },
 ];
 
 export default function AdminLayout() {

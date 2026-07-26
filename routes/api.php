@@ -63,11 +63,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ---- Vendor (owner-only) ------------------------------------------------
     Route::middleware('role:vendor')->prefix('vendor')->group(function () {
-        Route::get('/profile', [VendorProfileController::class, 'show']);
         Route::post('/profile', [VendorProfileController::class, 'store']);
         Route::put('/profile/{vendor}', [VendorProfileController::class, 'update']);
-
-        Route::get('/dashboard', [VendorDashboardController::class, 'show']);
 
         Route::get('/branches', [VendorBranchController::class, 'index']);
         Route::post('/branches', [VendorBranchController::class, 'store']);
@@ -82,14 +79,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/promotions/{promotion}', [VendorPromotionController::class, 'show']);
         Route::put('/promotions/{promotion}', [VendorPromotionController::class, 'update']);
 
-        Route::get('/analytics', [VendorAnalyticsController::class, 'show']);
-
         Route::get('/geocode/search', [GeocodeController::class, 'search']);
         Route::get('/geocode/reverse', [GeocodeController::class, 'reverse']);
     });
 
     // ---- Vendor (owner or branch-scoped staff) -------------------------------
     Route::middleware('role:vendor,branch_staff')->prefix('vendor')->group(function () {
+        Route::get('/profile', [VendorProfileController::class, 'show']);
+        Route::get('/dashboard', [VendorDashboardController::class, 'show']);
+        Route::get('/analytics', [VendorAnalyticsController::class, 'show']);
+
         Route::get('/promotions', [VendorPromotionController::class, 'index']);
 
         Route::post('/scan', [ScanController::class, 'store']);

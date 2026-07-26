@@ -9,16 +9,24 @@ use App\Http\Resources\VendorResource;
 use App\Models\PlatformSetting;
 use App\Models\Vendor;
 use App\Services\NominatimGeocoder;
+use App\Services\VendorAccessResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
-    public function __construct(private readonly NominatimGeocoder $geocoder) {}
+    public function __construct(
+        private readonly NominatimGeocoder $geocoder,
+        private readonly VendorAccessResolver $access,
+    ) {}
 
+    /**
+     * Shared by the owner and branch-scoped staff — staff need this for
+     * shop name/logo/status context on their own dashboard.
+     */
     public function show(Request $request)
     {
-        $vendor = $request->user()->vendor;
+        $vendor = $this->access->vendorFor($request->user());
 
         abort_if(! $vendor, 404, 'No shop has been set up yet.');
 

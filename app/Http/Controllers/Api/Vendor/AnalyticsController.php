@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomerActivity;
 use App\Models\Promotion;
 use App\Models\RewardRedemption;
+use App\Services\VendorAccessResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class AnalyticsController extends Controller
 {
+    public function __construct(private readonly VendorAccessResolver $access) {}
+
     /**
      * Supported duration presets. Short ranges are bucketed by day; the
      * multi-year ranges are bucketed by month so the response stays a
@@ -26,9 +29,15 @@ class AnalyticsController extends Controller
 
     public function show(Request $request)
     {
-        $vendor = $request->user()->vendor;
+        $user = $request->user();
+        $vendor = $this->access->vendorFor($user);
 
         abort_if(! $vendor, 404, 'No shop has been set up yet.');
+
+        $isBranchStaff = $user->role === 'branch_staff';
+        $forcedBranchId = $isBranchStaff
+            ? $this->access->branchFor($user, $vendor, null)?->id
+            : null;
 
         $range = $request->string('range', '7d')->toString();
         $config = self::RANGES[$range] ?? self::RANGES['7d'];
@@ -45,10 +54,12 @@ class AnalyticsController extends Controller
 
         $activities = CustomerActivity::where('vendor_id', $vendor->id)
             ->where('occurred_at', '>=', $from)
+            ->when($forcedBranchId, fn ($q) => $q->where('branch_id', $forcedBranchId))
             ->get();
 
         $previousActivities = CustomerActivity::where('vendor_id', $vendor->id)
             ->whereBetween('occurred_at', [$previousFrom, $from])
+            ->when($forcedBranchId, fn ($q) => $q->where('branch_id', $forcedBranchId))
             ->get();
 
         $totalCustomers = $activities->pluck('customer_id')->unique()->count();
@@ -79,30 +90,40 @@ class AnalyticsController extends Controller
             ];
         })->values();
 
-        $topPromotions = Promotion::where('vendor_id', $vendor->id)
-            ->withCount(['rewardRedemptions as redemptions_count' => function ($query) use ($from) {
-                $query->where('status', 'redeemed')->where('redeemed_at', '>=', $from);
-            }])
-            ->orderByDesc('redemptions_count')
-            ->limit(3)
-            ->get()
-            ->filter(fn (Promotion $promotion) => $promotion->redemptions_count > 0)
-            ->map(fn (Promotion $promotion, int $i) => [
-                'rank' => $i + 1,
-                'title' => $promotion->title,
-                'redeemed' => $promotion->redemptions_count,
-            ])
-            ->values();
+        // RewardRedemption isn't attributed to a branch in the schema, so it
+        // can't be correctly scoped to a single branch — rather than show a
+        // branch-scoped staff member vendor-wide figures, this section is
+        // left empty for them. The frontend hides this tab for staff.
+        if ($isBranchStaff) {
+            $topPromotions = collect();
+            $totalRedemptions = 0;
+            $previousRedemptions = 0;
+        } else {
+            $topPromotions = Promotion::where('vendor_id', $vendor->id)
+                ->withCount(['rewardRedemptions as redemptions_count' => function ($query) use ($from) {
+                    $query->where('status', 'redeemed')->where('redeemed_at', '>=', $from);
+                }])
+                ->orderByDesc('redemptions_count')
+                ->limit(3)
+                ->get()
+                ->filter(fn (Promotion $promotion) => $promotion->redemptions_count > 0)
+                ->map(fn (Promotion $promotion, int $i) => [
+                    'rank' => $i + 1,
+                    'title' => $promotion->title,
+                    'redeemed' => $promotion->redemptions_count,
+                ])
+                ->values();
 
-        $totalRedemptions = RewardRedemption::where('vendor_id', $vendor->id)
-            ->where('status', 'redeemed')
-            ->where('redeemed_at', '>=', $from)
-            ->count();
+            $totalRedemptions = RewardRedemption::where('vendor_id', $vendor->id)
+                ->where('status', 'redeemed')
+                ->where('redeemed_at', '>=', $from)
+                ->count();
 
-        $previousRedemptions = RewardRedemption::where('vendor_id', $vendor->id)
-            ->where('status', 'redeemed')
-            ->whereBetween('redeemed_at', [$previousFrom, $from])
-            ->count();
+            $previousRedemptions = RewardRedemption::where('vendor_id', $vendor->id)
+                ->where('status', 'redeemed')
+                ->whereBetween('redeemed_at', [$previousFrom, $from])
+                ->count();
+        }
 
         return response()->json([
             'data' => [

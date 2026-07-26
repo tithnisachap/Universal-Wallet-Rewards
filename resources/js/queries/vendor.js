@@ -39,10 +39,11 @@ export function useVendorDashboard(branchId) {
     });
 }
 
-export function useVendorBranches() {
+export function useVendorBranches(options = {}) {
     return useQuery({
         queryKey: ['vendor', 'branches'],
         queryFn: () => api.get('/vendor/branches'),
+        ...options,
     });
 }
 

@@ -39,7 +39,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import VendorApprovals from './pages/admin/VendorApprovals';
 import ReviewVendor from './pages/admin/ReviewVendor';
 import AdminAnalytics from './pages/admin/Analytics';
-import More from './pages/admin/More';
+import AdminProfile from './pages/admin/Profile';
 
 export const router = createBrowserRouter([
     { path: '/', element: <Navigate to="/login" replace /> },
@@ -109,9 +109,13 @@ export const router = createBrowserRouter([
                 path: '/staff',
                 element: <VendorLayout />,
                 children: [
-                    { index: true, element: <Navigate to="scanner" replace /> },
+                    { index: true, element: <Navigate to="dashboard" replace /> },
+                    { path: 'dashboard', element: <VendorDashboard basePath="/staff" /> },
+                    { path: 'promotions', element: <Promotions basePath="/staff" /> },
                     { path: 'scanner', element: <Scanner basePath="/staff" /> },
                     { path: 'wallet/:customerId', element: <UserWallet /> },
+                    { path: 'activity', element: <Activity /> },
+                    { path: 'analytics', element: <VendorAnalytics basePath="/staff" /> },
                 ],
             },
         ],
@@ -130,7 +134,7 @@ export const router = createBrowserRouter([
                     { path: 'vendors', element: <VendorApprovals /> },
                     { path: 'vendors/:vendorId/review', element: <ReviewVendor /> },
                     { path: 'analytics', element: <AdminAnalytics /> },
-                    { path: 'more', element: <More /> },
+                    { path: 'profile', element: <AdminProfile /> },
                 ],
             },
         ],

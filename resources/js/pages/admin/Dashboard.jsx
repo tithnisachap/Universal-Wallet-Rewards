@@ -1,5 +1,6 @@
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { PieChart, Pie, Cell } from 'recharts';
+import { Link } from 'react-router-dom';
 import Avatar from '../../components/ui/Avatar';
 import Card from '../../components/ui/Card';
 import QueryState from '../../components/ui/QueryState';
@@ -12,7 +13,9 @@ export default function Dashboard() {
         <div>
             <div className="flex items-center justify-between px-4 py-4">
                 <p className="text-lg font-bold text-brand-600">Admin Dashboard</p>
-                <Avatar size={36} />
+                <Link to="/admin/profile">
+                    <Avatar size={36} />
+                </Link>
             </div>
 
             <QueryState isLoading={isLoading} isError={isError} error={error} onRetry={refetch}>

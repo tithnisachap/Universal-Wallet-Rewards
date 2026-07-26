@@ -13,7 +13,7 @@ class MeController extends Controller
      */
     public function show(Request $request)
     {
-        $user = $request->user()->load(['customer', 'vendor']);
+        $user = $request->user()->load(['customer', 'vendor', 'branchStaff.branch']);
 
         return new UserResource($user);
     }
