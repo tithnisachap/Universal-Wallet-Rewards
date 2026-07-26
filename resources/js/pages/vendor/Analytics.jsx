@@ -15,35 +15,25 @@ const RANGE_OPTIONS = [
     { value: '10y', label: 'Past 10 Years' },
 ];
 
-export default function Analytics({ basePath = '/vendor' }) {
-    const isStaff = basePath === '/staff';
+export default function Analytics() {
     const [tab, setTab] = useState('customers');
     const [range, setRange] = useState('7d');
     const { data: analytics, isLoading, isError, error, refetch } = useVendorAnalytics(range);
-
-    // Redemptions aren't attributed to a branch in the data model, so they
-    // can't be scoped to a single branch — staff only ever see the Customer
-    // view, which is correctly scoped to their own branch.
-    const activeTab = isStaff ? 'customers' : tab;
 
     return (
         <div>
             <PageHeader title="Analytics" />
             <div className="px-4 py-4">
                 <div className="flex items-center justify-between gap-3">
-                    {isStaff ? (
-                        <p className="text-lg font-bold text-gray-900">Total Customer</p>
-                    ) : (
-                        <SegmentedControl
-                            className="flex-1"
-                            options={[
-                                { value: 'customers', label: 'Total Customer' },
-                                { value: 'redemption', label: 'Redemption' },
-                            ]}
-                            value={tab}
-                            onChange={setTab}
-                        />
-                    )}
+                    <SegmentedControl
+                        className="flex-1"
+                        options={[
+                            { value: 'customers', label: 'Total Customer' },
+                            { value: 'redemption', label: 'Redemption' },
+                        ]}
+                        value={tab}
+                        onChange={setTab}
+                    />
                     <Select compact value={range} onChange={(e) => setRange(e.target.value)}>
                         {RANGE_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -55,7 +45,7 @@ export default function Analytics({ basePath = '/vendor' }) {
 
                 <QueryState isLoading={isLoading} isError={isError} error={error} onRetry={refetch}>
                     {analytics ? (
-                        activeTab === 'customers' ? (
+                        tab === 'customers' ? (
                             <CustomerAnalytics data={analytics.customers} />
                         ) : (
                             <RedemptionAnalytics data={analytics.redemption} />

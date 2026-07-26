@@ -25,7 +25,9 @@ class RedemptionController extends Controller
         $vendor = $this->access->vendorFor($request->user());
         abort_if(! $vendor || $vendor->status !== 'approved', 403, 'Your shop must be approved to redeem rewards.');
 
-        $redemption = $this->loyaltyService->redeemCode($vendor, $request->string('code'));
+        $branch = $this->access->branchFor($request->user(), $vendor, $request->integer('branch_id') ?: null);
+
+        $redemption = $this->loyaltyService->redeemCode($vendor, $request->string('code'), $branch);
 
         return new RewardRedemptionResource($redemption->load(['customer', 'promotion']));
     }

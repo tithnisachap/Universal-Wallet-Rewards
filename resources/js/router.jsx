@@ -115,7 +115,7 @@ export const router = createBrowserRouter([
                     { path: 'scanner', element: <Scanner basePath="/staff" /> },
                     { path: 'wallet/:customerId', element: <UserWallet /> },
                     { path: 'activity', element: <Activity /> },
-                    { path: 'analytics', element: <VendorAnalytics basePath="/staff" /> },
+                    { path: 'analytics', element: <VendorAnalytics /> },
                 ],
             },
         ],

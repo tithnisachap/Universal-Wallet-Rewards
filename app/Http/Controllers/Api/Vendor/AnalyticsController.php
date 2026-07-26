@@ -90,40 +90,36 @@ class AnalyticsController extends Controller
             ];
         })->values();
 
-        // RewardRedemption isn't attributed to a branch in the schema, so it
-        // can't be correctly scoped to a single branch — rather than show a
-        // branch-scoped staff member vendor-wide figures, this section is
-        // left empty for them. The frontend hides this tab for staff.
-        if ($isBranchStaff) {
-            $topPromotions = collect();
-            $totalRedemptions = 0;
-            $previousRedemptions = 0;
-        } else {
-            $topPromotions = Promotion::where('vendor_id', $vendor->id)
-                ->withCount(['rewardRedemptions as redemptions_count' => function ($query) use ($from) {
-                    $query->where('status', 'redeemed')->where('redeemed_at', '>=', $from);
-                }])
-                ->orderByDesc('redemptions_count')
-                ->limit(3)
-                ->get()
-                ->filter(fn (Promotion $promotion) => $promotion->redemptions_count > 0)
-                ->map(fn (Promotion $promotion, int $i) => [
-                    'rank' => $i + 1,
-                    'title' => $promotion->title,
-                    'redeemed' => $promotion->redemptions_count,
-                ])
-                ->values();
+        $topPromotions = Promotion::where('vendor_id', $vendor->id)
+            ->withCount(['rewardRedemptions as redemptions_count' => function ($query) use ($from, $forcedBranchId) {
+                $query->where('status', 'redeemed')->where('redeemed_at', '>=', $from);
 
-            $totalRedemptions = RewardRedemption::where('vendor_id', $vendor->id)
-                ->where('status', 'redeemed')
-                ->where('redeemed_at', '>=', $from)
-                ->count();
+                if ($forcedBranchId) {
+                    $query->where('branch_id', $forcedBranchId);
+                }
+            }])
+            ->orderByDesc('redemptions_count')
+            ->limit(3)
+            ->get()
+            ->filter(fn (Promotion $promotion) => $promotion->redemptions_count > 0)
+            ->map(fn (Promotion $promotion, int $i) => [
+                'rank' => $i + 1,
+                'title' => $promotion->title,
+                'redeemed' => $promotion->redemptions_count,
+            ])
+            ->values();
 
-            $previousRedemptions = RewardRedemption::where('vendor_id', $vendor->id)
-                ->where('status', 'redeemed')
-                ->whereBetween('redeemed_at', [$previousFrom, $from])
-                ->count();
-        }
+        $totalRedemptions = RewardRedemption::where('vendor_id', $vendor->id)
+            ->where('status', 'redeemed')
+            ->where('redeemed_at', '>=', $from)
+            ->when($forcedBranchId, fn ($q) => $q->where('branch_id', $forcedBranchId))
+            ->count();
+
+        $previousRedemptions = RewardRedemption::where('vendor_id', $vendor->id)
+            ->where('status', 'redeemed')
+            ->whereBetween('redeemed_at', [$previousFrom, $from])
+            ->when($forcedBranchId, fn ($q) => $q->where('branch_id', $forcedBranchId))
+            ->count();
 
         return response()->json([
             'data' => [

@@ -14,6 +14,7 @@ class RewardRedemption extends Model
     protected $fillable = [
         'customer_id',
         'vendor_id',
+        'branch_id',
         'promotion_id',
         'code',
         'status',
@@ -37,6 +38,11 @@ class RewardRedemption extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function promotion(): BelongsTo

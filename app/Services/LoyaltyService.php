@@ -137,7 +137,7 @@ class LoyaltyService
      * Vendor-initiated: scans/confirms a customer's redemption code,
      * consumes the stamps, and closes the redemption out.
      */
-    public function redeemCode(Vendor $vendor, string $code): RewardRedemption
+    public function redeemCode(Vendor $vendor, string $code, ?Branch $branch = null): RewardRedemption
     {
         // These checks are deliberately outside the transaction below: the
         // "mark expired" write in particular must survive even though the
@@ -163,7 +163,7 @@ class LoyaltyService
             throw ValidationException::withMessages(['code' => 'This code has expired.']);
         }
 
-        return DB::transaction(function () use ($vendor, $redemption) {
+        return DB::transaction(function () use ($vendor, $redemption, $branch) {
             // Re-fetch under a row lock in case another request redeemed or
             // expired this exact code between the checks above and now.
             $redemption = RewardRedemption::where('id', $redemption->id)->lockForUpdate()->first();
@@ -186,11 +186,13 @@ class LoyaltyService
             $redemption->update([
                 'status' => 'redeemed',
                 'redeemed_at' => now(),
+                'branch_id' => $branch?->id,
             ]);
 
             CustomerActivity::create([
                 'customer_id' => $redemption->customer_id,
                 'vendor_id' => $vendor->id,
+                'branch_id' => $branch?->id,
                 'promotion_id' => $promotion->id,
                 'type' => 'reward_redeemed',
                 'amount' => -$promotion->required_amount,
