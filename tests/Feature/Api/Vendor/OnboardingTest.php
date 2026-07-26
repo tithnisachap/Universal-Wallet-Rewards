@@ -31,12 +31,16 @@ class OnboardingTest extends ApiTestCase
             'business_name' => 'The Coffee Bean',
             'category' => 'Coffee Shop',
             'phone' => '012 345 678',
-            'address' => '#123, Street 123, Phnom Penh',
+            'latitude' => 11.5564,
+            'longitude' => 104.9282,
             'website' => 'https://coffeebean.com',
         ])->assertCreated();
 
         $response->assertJsonPath('data.business_name', 'The Coffee Bean');
         $response->assertJsonPath('data.status', 'pending');
+        // Address is server-derived from the pinned coordinates, never
+        // client-typed — confirms the reverse-geocode wiring actually ran.
+        $response->assertJsonPath('data.address', 'Fake Test Address, Phnom Penh, Cambodia');
 
         $this->assertDatabaseHas('vendors', [
             'user_id' => $user->id,

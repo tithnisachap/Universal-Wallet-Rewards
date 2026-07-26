@@ -13,7 +13,8 @@ class BranchTest extends ApiTestCase
 
         $response = $this->postJson('/api/vendor/branches', [
             'name' => 'TK Avenue Branch',
-            'address' => 'TK Avenue, Toul Kork, Phnom Penh',
+            'latitude' => 11.5564,
+            'longitude' => 104.9282,
         ])->assertCreated();
 
         $response->assertJsonPath('data.is_main', true);
@@ -26,7 +27,8 @@ class BranchTest extends ApiTestCase
 
         $this->postJson('/api/vendor/branches', [
             'name' => 'New Main Branch',
-            'address' => 'Somewhere',
+            'latitude' => 11.5564,
+            'longitude' => 104.9282,
             'is_main' => true,
         ])->assertCreated()->assertJsonPath('data.is_main', true);
 
@@ -51,12 +53,12 @@ class BranchTest extends ApiTestCase
             ->assertJsonPath('data.name', 'Updated Name');
     }
 
-    public function test_branch_creation_requires_a_name_and_address(): void
+    public function test_branch_creation_requires_a_name_and_location(): void
     {
         $this->actingAsVendor();
 
         $this->postJson('/api/vendor/branches', [])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'address']);
+            ->assertJsonValidationErrors(['name', 'latitude', 'longitude']);
     }
 }
