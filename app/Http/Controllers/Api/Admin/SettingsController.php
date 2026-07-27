@@ -15,12 +15,13 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        $request->validate([
-            'auto_approve_vendors' => ['required', 'boolean'],
+        $validated = $request->validate([
+            'auto_approve_vendors' => ['sometimes', 'required', 'boolean'],
+            'support_email' => ['sometimes', 'nullable', 'email', 'max:255'],
         ]);
 
         $settings = PlatformSetting::current();
-        $settings->update(['auto_approve_vendors' => $request->boolean('auto_approve_vendors')]);
+        $settings->update($validated);
 
         return response()->json(['data' => $this->present($settings)]);
     }
@@ -29,6 +30,7 @@ class SettingsController extends Controller
     {
         return [
             'auto_approve_vendors' => $settings->auto_approve_vendors,
+            'support_email' => $settings->support_email,
         ];
     }
 }

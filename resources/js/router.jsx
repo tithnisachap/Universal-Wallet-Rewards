@@ -33,11 +33,14 @@ import Scanner from './pages/vendor/Scanner';
 import UserWallet from './pages/vendor/UserWallet';
 import Activity from './pages/vendor/Activity';
 import VendorAnalytics from './pages/vendor/Analytics';
+import StaffProfile from './pages/vendor/StaffProfile';
 
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import VendorApprovals from './pages/admin/VendorApprovals';
 import ReviewVendor from './pages/admin/ReviewVendor';
+import AdminCustomers from './pages/admin/Customers';
+import AdminCustomerDetail from './pages/admin/CustomerDetail';
 import AdminAnalytics from './pages/admin/Analytics';
 import AdminProfile from './pages/admin/Profile';
 
@@ -116,6 +119,7 @@ export const router = createBrowserRouter([
                     { path: 'wallet/:customerId', element: <UserWallet /> },
                     { path: 'activity', element: <Activity /> },
                     { path: 'analytics', element: <VendorAnalytics /> },
+                    { path: 'profile', element: <StaffProfile /> },
                 ],
             },
         ],
@@ -133,6 +137,8 @@ export const router = createBrowserRouter([
                     { path: 'dashboard', element: <AdminDashboard /> },
                     { path: 'vendors', element: <VendorApprovals /> },
                     { path: 'vendors/:vendorId/review', element: <ReviewVendor /> },
+                    { path: 'customers', element: <AdminCustomers /> },
+                    { path: 'customers/:customerId', element: <AdminCustomerDetail /> },
                     { path: 'analytics', element: <AdminAnalytics /> },
                     { path: 'profile', element: <AdminProfile /> },
                 ],

@@ -38,13 +38,9 @@ export default function Dashboard({ basePath = '/vendor' }) {
         <div>
             <div className="flex items-center justify-between px-4 py-4">
                 <p className="text-lg font-bold text-brand-600">Universal Wallet</p>
-                {isStaff ? (
+                <Link to={isStaff ? '/staff/profile' : '/vendor/profile'}>
                     <Avatar size={36} />
-                ) : (
-                    <Link to="/vendor/profile">
-                        <Avatar size={36} />
-                    </Link>
-                )}
+                </Link>
             </div>
 
             <div className="mx-4 rounded-2xl bg-brand-600 p-5 text-white">

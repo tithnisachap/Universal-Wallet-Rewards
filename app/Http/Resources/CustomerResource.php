@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\CustomerLoyalty;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,6 +22,19 @@ class CustomerResource extends JsonResource
             'email' => $this->whenLoaded('user', fn () => $this->user->email),
             'avatar' => $this->whenLoaded('user', fn () => $this->user->avatar),
             'member_since' => $this->created_at,
+            // Admin customer-detail view only: every vendor this customer
+            // has an existing loyalty account with (not a full directory).
+            'vendors' => $this->when(
+                isset($this->vendor_loyalty_list),
+                fn () => $this->vendor_loyalty_list->map(fn (CustomerLoyalty $loyalty) => [
+                    'vendor_id' => $loyalty->vendor_id,
+                    'business_name' => $loyalty->vendor->business_name,
+                    'logo_path' => $loyalty->vendor->logo_path,
+                    'category' => $loyalty->vendor->category,
+                    'points_balance' => $loyalty->points_balance,
+                    'stamps_count' => $loyalty->stamps_count,
+                ]),
+            ),
         ];
     }
 }

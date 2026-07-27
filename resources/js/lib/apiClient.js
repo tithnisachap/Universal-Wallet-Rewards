@@ -76,4 +76,18 @@ export const api = {
     delete: (url, config) => unwrap(apiClient.delete(url, config)),
 };
 
+/**
+ * Like api.get, but keeps Laravel's pagination meta (current_page,
+ * last_page, total, ...) alongside the data array instead of discarding
+ * it — needed anywhere the UI shows real page controls, not just a list.
+ */
+export async function getPaginated(url, config) {
+    try {
+        const { data } = await apiClient.get(url, config);
+        return { data: data.data, meta: data.meta };
+    } catch (error) {
+        throw normalizeError(error);
+    }
+}
+
 export default apiClient;

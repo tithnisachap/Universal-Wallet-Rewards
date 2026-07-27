@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\PlatformSetting;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -33,6 +34,13 @@ class VendorResource extends JsonResource
             'owner' => new UserResource($this->whenLoaded('user')),
             'branches' => BranchResource::collection($this->whenLoaded('branches')),
             'branches_count' => $this->whenCounted('branches'),
+            'promotions' => PromotionResource::collection($this->whenLoaded('promotions')),
+            // Never tied to a specific admin account — pulled from platform
+            // settings so it stays correct even if admin emails change.
+            'support_email' => $this->when(
+                $this->status === 'suspended',
+                fn () => PlatformSetting::current()->support_email,
+            ),
             'loyalty' => $this->when(
                 isset($this->loyalty_snapshot),
                 fn () => $this->loyalty_snapshot ? [

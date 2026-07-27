@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Api\Auth\DevLoginController;
+use App\Http\Controllers\Api\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Api\Admin\VendorController as AdminVendorController;
@@ -111,6 +112,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vendors/{vendor}/review', [AdminVendorController::class, 'review']);
         Route::post('/vendors/{vendor}/suspend', [AdminVendorController::class, 'suspend']);
         Route::post('/vendors/{vendor}/reinstate', [AdminVendorController::class, 'reinstate']);
+
+        Route::get('/customers', [AdminCustomerController::class, 'index']);
+        Route::get('/customers/{customer}', [AdminCustomerController::class, 'show']);
 
         Route::get('/analytics', [AdminAnalyticsController::class, 'show']);
 

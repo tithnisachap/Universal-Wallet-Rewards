@@ -11,6 +11,7 @@ class PlatformSetting extends Model
 {
     protected $fillable = [
         'auto_approve_vendors',
+        'support_email',
     ];
 
     protected function casts(): array

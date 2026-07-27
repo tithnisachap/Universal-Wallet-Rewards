@@ -25,8 +25,16 @@ class VendorController extends Controller
 
         if ($status === 'history') {
             $query->whereIn('status', ['approved', 'rejected'])->orderByDesc('reviewed_at');
+        } elseif ($status === 'all') {
+            // The general vendor directory — every account regardless of
+            // status, searchable by business name.
+            $query->orderBy('business_name');
         } else {
             $query->where('status', $status)->orderByDesc('submitted_at');
+        }
+
+        if ($status === 'all' && $request->filled('search')) {
+            $query->where('business_name', 'ilike', '%'.$request->string('search').'%');
         }
 
         $vendors = $query->paginate($request->integer('per_page', 20));
@@ -38,7 +46,12 @@ class VendorController extends Controller
     {
         $this->authorize('view', $vendor);
 
-        return new VendorResource($vendor->load(['user:id,name,email', 'reviewer:id,name']));
+        return new VendorResource($vendor->load([
+            'user:id,name,email',
+            'reviewer:id,name',
+            'branches' => fn ($query) => $query->orderByDesc('is_main')->orderBy('name'),
+            'promotions' => fn ($query) => $query->where('is_active', true)->orderByDesc('created_at'),
+        ]));
     }
 
     public function review(ReviewVendorRequest $request, Vendor $vendor)

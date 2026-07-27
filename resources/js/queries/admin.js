@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/apiClient';
+import { api, getPaginated } from '../lib/apiClient';
 
 export function useAdminDashboard() {
     return useQuery({
@@ -56,6 +56,38 @@ export function useReinstateVendor(vendorId) {
     return useMutation({
         mutationFn: () => api.post(`/admin/vendors/${vendorId}/reinstate`),
         onSuccess: () => invalidateVendorLists(queryClient, vendorId),
+    });
+}
+
+// "All Vendors" directory tab — separate from the pending/history queries
+// above since it needs real page controls, not just a flat list.
+export function useAdminVendorDirectory({ search = '', page = 1 } = {}) {
+    return useQuery({
+        queryKey: ['admin', 'vendors', 'directory', { search, page }],
+        queryFn: () =>
+            getPaginated('/admin/vendors', {
+                params: { status: 'all', search: search || undefined, page, per_page: 10 },
+            }),
+        placeholderData: (previous) => previous,
+    });
+}
+
+export function useAdminCustomers({ search = '', page = 1 } = {}) {
+    return useQuery({
+        queryKey: ['admin', 'customers', { search, page }],
+        queryFn: () =>
+            getPaginated('/admin/customers', {
+                params: { search: search || undefined, page, per_page: 10 },
+            }),
+        placeholderData: (previous) => previous,
+    });
+}
+
+export function useAdminCustomer(customerId) {
+    return useQuery({
+        queryKey: ['admin', 'customers', customerId],
+        queryFn: () => api.get(`/admin/customers/${customerId}`),
+        enabled: Boolean(customerId),
     });
 }
 

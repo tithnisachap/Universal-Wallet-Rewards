@@ -103,6 +103,15 @@ export default function Profile() {
                         {vendor.review_note ? (
                             <p className="mt-2 rounded-lg bg-gray-50 p-3 text-sm text-gray-600">"{vendor.review_note}"</p>
                         ) : null}
+                        {vendor.status === 'suspended' && vendor.support_email ? (
+                            <p className="mt-2 text-sm text-gray-500">
+                                To appeal this decision, contact{' '}
+                                <a href={`mailto:${vendor.support_email}`} className="font-semibold text-brand-600">
+                                    {vendor.support_email}
+                                </a>
+                                .
+                            </p>
+                        ) : null}
                     </Card>
 
                     {LogoutLink}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { MapPin, Star, Tag } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -7,13 +8,15 @@ import Button from '../../components/ui/Button';
 import QueryState from '../../components/ui/QueryState';
 import VendorAvatar from '../../components/VendorAvatar';
 import { Textarea } from '../../components/ui/Field';
-import { useAdminVendor, useReviewVendor } from '../../queries/admin';
+import { useAdminVendor, useReviewVendor, useSuspendVendor, useReinstateVendor } from '../../queries/admin';
 
 export default function ReviewVendor() {
     const { vendorId } = useParams();
     const navigate = useNavigate();
     const { data: vendor, isLoading, isError, error, refetch } = useAdminVendor(vendorId);
     const reviewVendor = useReviewVendor(vendorId);
+    const suspendVendor = useSuspendVendor(vendorId);
+    const reinstateVendor = useReinstateVendor(vendorId);
     const [note, setNote] = useState('');
 
     function handleDecision(decision) {
@@ -22,6 +25,16 @@ export default function ReviewVendor() {
             { onSuccess: () => navigate(-1) },
         );
     }
+
+    function handleSuspend() {
+        suspendVendor.mutate({ review_note: note || undefined }, { onSuccess: () => setNote('') });
+    }
+
+    function handleReinstate() {
+        reinstateVendor.mutate();
+    }
+
+    const isOperating = vendor?.status === 'approved' || vendor?.status === 'suspended';
 
     return (
         <div>
@@ -61,20 +74,87 @@ export default function ReviewVendor() {
                                 </dl>
                             </Card>
 
+                            {isOperating ? (
+                                <>
+                                    <div>
+                                        <p className="mb-2 font-bold text-gray-900">
+                                            Branches {vendor.branches?.length ? `(${vendor.branches.length})` : ''}
+                                        </p>
+                                        {vendor.branches?.length ? (
+                                            <div className="space-y-2">
+                                                {vendor.branches.map((branch) => (
+                                                    <Card key={branch.id} className="flex items-center gap-3">
+                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                                                            <MapPin size={16} />
+                                                        </span>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="font-semibold text-gray-900">
+                                                                {branch.name}
+                                                                {branch.is_main ? (
+                                                                    <span className="ml-2 text-xs font-normal text-brand-600">Main</span>
+                                                                ) : null}
+                                                            </p>
+                                                            <p className="truncate text-sm text-gray-500">{branch.address}</p>
+                                                        </div>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-gray-400">No branches set up yet.</p>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <p className="mb-2 font-bold text-gray-900">Active Promotions</p>
+                                        {vendor.promotions?.length ? (
+                                            <div className="space-y-2">
+                                                {vendor.promotions.map((promo) => (
+                                                    <Card key={promo.id} className="flex items-center gap-3">
+                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                                                            {promo.type === 'stamps' ? <Star size={16} /> : <Tag size={16} />}
+                                                        </span>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="font-semibold text-gray-900">{promo.title}</p>
+                                                            <p className="truncate text-sm text-gray-500">
+                                                                {promo.required_amount} {promo.type === 'stamps' ? 'Stamps' : 'Points'}
+                                                            </p>
+                                                        </div>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-gray-400">No active promotions right now.</p>
+                                        )}
+                                    </div>
+                                </>
+                            ) : null}
+
                             {vendor.status === 'pending' ? (
                                 <Card>
                                     <p className="font-bold text-gray-900">Action</p>
                                     <p className="mb-2 text-sm text-gray-500">Note to Vendor (optional)</p>
                                     <Textarea placeholder="Add a note ..." value={note} onChange={(e) => setNote(e.target.value)} />
                                 </Card>
+                            ) : vendor.status === 'approved' ? (
+                                <Card>
+                                    <p className="font-bold text-gray-900">Suspend Shop</p>
+                                    <p className="mb-2 text-sm text-gray-500">
+                                        This immediately hides the shop from customers. Reason (optional):
+                                    </p>
+                                    <Textarea placeholder="Add a reason ..." value={note} onChange={(e) => setNote(e.target.value)} />
+                                </Card>
                             ) : vendor.review_note ? (
                                 <Card>
-                                    <p className="font-bold text-gray-900">Review Note</p>
+                                    <p className="font-bold text-gray-900">
+                                        {vendor.status === 'suspended' ? 'Suspension Reason' : 'Review Note'}
+                                    </p>
                                     <p className="mt-2 text-sm text-gray-500">{vendor.review_note}</p>
                                 </Card>
                             ) : null}
 
                             {reviewVendor.isError ? <p className="text-sm text-danger-500">{reviewVendor.error.message}</p> : null}
+                            {suspendVendor.isError ? <p className="text-sm text-danger-500">{suspendVendor.error.message}</p> : null}
+                            {reinstateVendor.isError ? <p className="text-sm text-danger-500">{reinstateVendor.error.message}</p> : null}
                         </div>
 
                         {vendor.status === 'pending' ? (
@@ -84,6 +164,18 @@ export default function ReviewVendor() {
                                 </Button>
                                 <Button variant="success" onClick={() => handleDecision('approved')} disabled={reviewVendor.isPending}>
                                     Approve
+                                </Button>
+                            </div>
+                        ) : vendor.status === 'approved' ? (
+                            <div className="sticky bottom-0 border-t border-gray-100 bg-white px-4 py-4">
+                                <Button variant="danger" onClick={handleSuspend} disabled={suspendVendor.isPending}>
+                                    {suspendVendor.isPending ? 'Suspending...' : 'Suspend Shop'}
+                                </Button>
+                            </div>
+                        ) : vendor.status === 'suspended' ? (
+                            <div className="sticky bottom-0 border-t border-gray-100 bg-white px-4 py-4">
+                                <Button variant="success" onClick={handleReinstate} disabled={reinstateVendor.isPending}>
+                                    {reinstateVendor.isPending ? 'Reinstating...' : 'Reinstate Shop'}
                                 </Button>
                             </div>
                         ) : null}

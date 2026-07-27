@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Store } from 'lucide-react';
 import { SegmentedControl, PillTabs } from '../../components/ui/Tabs';
@@ -6,11 +6,15 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Switch from '../../components/ui/Switch';
+import SearchInput from '../../components/ui/SearchInput';
+import { Field, Input } from '../../components/ui/Field';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
+import Pagination from '../../components/ui/Pagination';
 import VendorAvatar from '../../components/VendorAvatar';
 import {
     useAdminVendors,
+    useAdminVendorDirectory,
     useReviewVendor,
     usePlatformSettings,
     useUpdatePlatformSettings,
@@ -34,6 +38,11 @@ export default function VendorApprovals() {
 
     const { data: settings } = usePlatformSettings();
     const updateSettings = useUpdatePlatformSettings();
+    const [supportEmail, setSupportEmail] = useState('');
+
+    useEffect(() => {
+        setSupportEmail(settings?.support_email ?? '');
+    }, [settings?.support_email]);
 
     return (
         <div className="px-4 py-4">
@@ -58,10 +67,37 @@ export default function VendorApprovals() {
                 />
             </Card>
 
+            <Card className="mt-4">
+                <p className="font-semibold text-gray-900">Support Email</p>
+                <p className="mb-3 text-sm text-gray-500">
+                    Shown to a vendor if their shop is suspended, so they know where to appeal.
+                </p>
+                <div className="flex gap-2">
+                    <Field>
+                        <Input
+                            type="email"
+                            placeholder="support@example.com"
+                            value={supportEmail}
+                            onChange={(e) => setSupportEmail(e.target.value)}
+                            className="flex-1"
+                        />
+                    </Field>
+                    <Button
+                        size="sm"
+                        className="w-auto"
+                        disabled={updateSettings.isPending || supportEmail === (settings?.support_email ?? '')}
+                        onClick={() => updateSettings.mutate({ support_email: supportEmail || null })}
+                    >
+                        Save
+                    </Button>
+                </div>
+            </Card>
+
             <SegmentedControl
                 className="mt-4"
                 options={[
                     { value: 'applications', label: 'Applications' },
+                    { value: 'directory', label: 'All Vendors' },
                     { value: 'history', label: 'History' },
                 ]}
                 value={topTab}
@@ -101,6 +137,8 @@ export default function VendorApprovals() {
                         </p>
                     ) : null}
                 </>
+            ) : topTab === 'directory' ? (
+                <VendorDirectory />
             ) : (
                 <>
                     <p className="mt-4 text-sm font-semibold text-brand-600">All ({vendors?.length ?? 0})</p>
@@ -132,6 +170,67 @@ export default function VendorApprovals() {
                     </div>
                 </>
             )}
+        </div>
+    );
+}
+
+function VendorDirectory() {
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => setDebouncedSearch(search), 300);
+        return () => clearTimeout(timeout);
+    }, [search]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch]);
+
+    const { data, isLoading, isError, error, refetch } = useAdminVendorDirectory({ search: debouncedSearch, page });
+    const vendors = data?.data;
+    const meta = data?.meta;
+
+    return (
+        <div className="mt-4">
+            <SearchInput
+                placeholder="Search vendors by business name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <div className="mt-4 space-y-3">
+                <QueryState
+                    isLoading={isLoading}
+                    isError={isError}
+                    error={error}
+                    onRetry={refetch}
+                    isEmpty={vendors?.length === 0}
+                    emptyState={
+                        <EmptyState
+                            icon={Store}
+                            title="No vendors found"
+                            description={search ? 'Try a different search term.' : 'No vendors have signed up yet.'}
+                        />
+                    }
+                >
+                    {vendors?.map((vendor) => (
+                        <Link key={vendor.id} to={`/admin/vendors/${vendor.id}/review`} className="block">
+                            <Card className="flex items-center gap-3">
+                                <VendorAvatar vendor={vendor} />
+                                <div className="flex-1">
+                                    <p className="font-semibold text-gray-900">{vendor.business_name}</p>
+                                    <p className="text-sm text-gray-500">{vendor.category}</p>
+                                </div>
+                                <Badge tone={vendor.status}>{vendor.status}</Badge>
+                            </Card>
+                        </Link>
+                    ))}
+                </QueryState>
+            </div>
+
+            <Pagination meta={meta} onPageChange={setPage} />
         </div>
     );
 }
