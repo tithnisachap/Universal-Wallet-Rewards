@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/apiClient';
+import { api, getPaginated } from '../lib/apiClient';
 
 export function useCustomerProfile() {
     return useQuery({
@@ -20,10 +20,10 @@ export function useUpdateCustomerProfile() {
     });
 }
 
-export function useVendorDirectory(search = '') {
+export function useVendorDirectory({ search = '', page = 1 } = {}) {
     return useQuery({
-        queryKey: ['customer', 'vendors', { search }],
-        queryFn: () => api.get('/customer/vendors', { params: { search: search || undefined } }),
+        queryKey: ['customer', 'vendors', { search, page }],
+        queryFn: () => getPaginated('/customer/vendors', { params: { search: search || undefined, page } }),
         placeholderData: (previous) => previous,
     });
 }
@@ -52,11 +52,12 @@ export function useVendorLoyalty(vendorId) {
     });
 }
 
-export function useVendorActivities(vendorId) {
+export function useVendorActivities(vendorId, { page = 1 } = {}) {
     return useQuery({
-        queryKey: ['customer', 'vendors', vendorId, 'activities'],
-        queryFn: () => api.get(`/customer/vendors/${vendorId}/activities`),
+        queryKey: ['customer', 'vendors', vendorId, 'activities', { page }],
+        queryFn: () => getPaginated(`/customer/vendors/${vendorId}/activities`, { params: { page } }),
         enabled: Boolean(vendorId),
+        placeholderData: (previous) => previous,
     });
 }
 

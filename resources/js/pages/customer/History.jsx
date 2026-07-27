@@ -1,17 +1,22 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Gift, Receipt } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
+import Pagination from '../../components/ui/Pagination';
 import VendorAvatar from '../../components/VendorAvatar';
 import { activityLabel, formatAmount, formatDateTime } from '../../lib/activityLabels';
 import { useVendorActivities, useVendorDetail } from '../../queries/customer';
 
 export default function History() {
     const { vendorId } = useParams();
+    const [page, setPage] = useState(1);
     const { data: vendor } = useVendorDetail(vendorId);
-    const { data: activities, isLoading, isError, error, refetch } = useVendorActivities(vendorId);
+    const { data, isLoading, isError, error, refetch } = useVendorActivities(vendorId, { page });
+    const activities = data?.data;
+    const meta = data?.meta;
 
     const iconFor = (type) => (type === 'reward_redeemed' ? Gift : Plus);
     const toneFor = (type) => (type === 'reward_redeemed' ? 'bg-danger-50 text-danger-500' : 'bg-brand-50 text-brand-600');
@@ -70,6 +75,8 @@ export default function History() {
                         })}
                     </Card>
                 </QueryState>
+
+                <Pagination meta={meta} onPageChange={setPage} />
             </div>
         </div>
     );

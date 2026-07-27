@@ -29,12 +29,22 @@ const statusTabs = [
 export default function VendorApprovals() {
     const [topTab, setTopTab] = useState('applications');
     const [statusTab, setStatusTab] = useState('pending');
+    const [page, setPage] = useState(1);
     const status = topTab === 'history' ? 'history' : statusTab;
 
-    const { data: vendors, isLoading, isError, error, refetch } = useAdminVendors(status);
+    useEffect(() => {
+        setPage(1);
+    }, [status]);
+
+    const { data, isLoading, isError, error, refetch } = useAdminVendors(status, { page });
+    const vendors = data?.data;
+    const meta = data?.meta;
     // Independent of whichever tab is active, so the "Pending (N)" badge
     // doesn't flicker to whatever count happens to be currently displayed.
-    const { data: pendingVendors } = useAdminVendors('pending');
+    // meta.total (not .length) since that's the true count across every
+    // page, not just however many happen to fit on the first one.
+    const { data: pendingData } = useAdminVendors('pending');
+    const pendingCount = pendingData?.meta?.total ?? 0;
 
     const { data: settings } = usePlatformSettings();
     const updateSettings = useUpdatePlatformSettings();
@@ -109,7 +119,7 @@ export default function VendorApprovals() {
                     <PillTabs
                         options={statusTabs.map((tab) => ({
                             ...tab,
-                            label: tab.value === 'pending' ? `Pending (${pendingVendors?.length ?? 0})` : tab.label,
+                            label: tab.value === 'pending' ? `Pending (${pendingCount})` : tab.label,
                         }))}
                         value={statusTab}
                         onChange={setStatusTab}
@@ -131,17 +141,13 @@ export default function VendorApprovals() {
                         </QueryState>
                     </div>
 
-                    {statusTab === 'pending' && vendors?.length > 0 ? (
-                        <p className="mt-4 text-center text-sm text-gray-400">
-                            Showing 1 to {vendors.length} of {vendors.length} results
-                        </p>
-                    ) : null}
+                    <Pagination meta={meta} onPageChange={setPage} />
                 </>
             ) : topTab === 'directory' ? (
                 <VendorDirectory />
             ) : (
                 <>
-                    <p className="mt-4 text-sm font-semibold text-brand-600">All ({vendors?.length ?? 0})</p>
+                    <p className="mt-4 text-sm font-semibold text-brand-600">All ({meta?.total ?? 0})</p>
                     <div className="mt-3 space-y-3">
                         <QueryState
                             isLoading={isLoading}
@@ -168,6 +174,8 @@ export default function VendorApprovals() {
                             ))}
                         </QueryState>
                     </div>
+
+                    <Pagination meta={meta} onPageChange={setPage} />
                 </>
             )}
         </div>

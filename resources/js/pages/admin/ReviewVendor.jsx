@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MapPin, Star, Tag } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
@@ -83,20 +83,26 @@ export default function ReviewVendor() {
                                         {vendor.branches?.length ? (
                                             <div className="space-y-2">
                                                 {vendor.branches.map((branch) => (
-                                                    <Card key={branch.id} className="flex items-center gap-3">
-                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-                                                            <MapPin size={16} />
-                                                        </span>
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className="font-semibold text-gray-900">
-                                                                {branch.name}
-                                                                {branch.is_main ? (
-                                                                    <span className="ml-2 text-xs font-normal text-brand-600">Main</span>
-                                                                ) : null}
-                                                            </p>
-                                                            <p className="truncate text-sm text-gray-500">{branch.address}</p>
-                                                        </div>
-                                                    </Card>
+                                                    <Link
+                                                        key={branch.id}
+                                                        to={`/admin/vendors/${vendor.id}/branches/${branch.id}`}
+                                                        className="block"
+                                                    >
+                                                        <Card className="flex items-center gap-3">
+                                                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                                                                <MapPin size={16} />
+                                                            </span>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="font-semibold text-gray-900">
+                                                                    {branch.name}
+                                                                    {branch.is_main ? (
+                                                                        <span className="ml-2 text-xs font-normal text-brand-600">Main</span>
+                                                                    ) : null}
+                                                                </p>
+                                                                <p className="truncate text-sm text-gray-500">{branch.address}</p>
+                                                            </div>
+                                                        </Card>
+                                                    </Link>
                                                 ))}
                                             </div>
                                         ) : (

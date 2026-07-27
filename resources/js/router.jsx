@@ -41,6 +41,7 @@ import VendorApprovals from './pages/admin/VendorApprovals';
 import ReviewVendor from './pages/admin/ReviewVendor';
 import AdminCustomers from './pages/admin/Customers';
 import AdminCustomerDetail from './pages/admin/CustomerDetail';
+import AdminBranchDetail from './pages/admin/BranchDetail';
 import AdminAnalytics from './pages/admin/Analytics';
 import AdminProfile from './pages/admin/Profile';
 
@@ -137,6 +138,7 @@ export const router = createBrowserRouter([
                     { path: 'dashboard', element: <AdminDashboard /> },
                     { path: 'vendors', element: <VendorApprovals /> },
                     { path: 'vendors/:vendorId/review', element: <ReviewVendor /> },
+                    { path: 'vendors/:vendorId/branches/:branchId', element: <AdminBranchDetail /> },
                     { path: 'customers', element: <AdminCustomers /> },
                     { path: 'customers/:customerId', element: <AdminCustomerDetail /> },
                     { path: 'analytics', element: <AdminAnalytics /> },

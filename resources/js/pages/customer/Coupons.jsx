@@ -5,19 +5,27 @@ import SearchInput from '../../components/ui/SearchInput';
 import Card from '../../components/ui/Card';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
+import Pagination from '../../components/ui/Pagination';
 import VendorAvatar from '../../components/VendorAvatar';
 import { useVendorDirectory } from '../../queries/customer';
 
 export default function Coupons() {
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         const timeout = setTimeout(() => setDebouncedSearch(search), 300);
         return () => clearTimeout(timeout);
     }, [search]);
 
-    const { data: vendors, isLoading, isError, error, refetch } = useVendorDirectory(debouncedSearch);
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch]);
+
+    const { data, isLoading, isError, error, refetch } = useVendorDirectory({ search: debouncedSearch, page });
+    const vendors = data?.data;
+    const meta = data?.meta;
 
     const sortedVendors = useMemo(() => {
         if (!vendors) return vendors;
@@ -80,6 +88,8 @@ export default function Coupons() {
                     ))}
                 </QueryState>
             </div>
+
+            <Pagination meta={meta} onPageChange={setPage} />
         </div>
     );
 }

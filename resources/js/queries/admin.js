@@ -8,10 +8,10 @@ export function useAdminDashboard() {
     });
 }
 
-export function useAdminVendors(status = 'pending') {
+export function useAdminVendors(status = 'pending', { page = 1 } = {}) {
     return useQuery({
-        queryKey: ['admin', 'vendors', { status }],
-        queryFn: () => api.get('/admin/vendors', { params: { status } }),
+        queryKey: ['admin', 'vendors', { status, page }],
+        queryFn: () => getPaginated('/admin/vendors', { params: { status, page, per_page: 10 } }),
         placeholderData: (previous) => previous,
     });
 }
