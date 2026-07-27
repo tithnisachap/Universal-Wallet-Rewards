@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import QueryState from '../../components/ui/QueryState';
 import { useVendorBranches, useVendorDashboard, useVendorProfile } from '../../queries/vendor';
 import { useMe } from '../../queries/auth';
+import { VENDOR_STATUS_MESSAGES } from '../../data/vendorStatusMessages';
 
 function quickActionsFor(basePath, isStaff) {
     const actions = [
@@ -24,14 +25,17 @@ function quickActionsFor(basePath, isStaff) {
 export default function Dashboard({ basePath = '/vendor' }) {
     const isStaff = basePath === '/staff';
     const [branchId, setBranchId] = useState('all');
-    const { data: vendor } = useVendorProfile();
+    // isError here specifically means "no vendor record exists at all" (a
+    // real 404) — distinct from "a vendor record exists but isn't approved
+    // yet" (pending/rejected/suspended), which needs different messaging.
+    const { data: vendor, isError: hasNoShop } = useVendorProfile();
     const { data: me } = useMe({ enabled: isStaff });
     const { data: branches } = useVendorBranches({ enabled: !isStaff });
     const { data: overview, isLoading, isError, error, refetch } = useVendorDashboard(
         isStaff ? null : (branchId === 'all' ? null : branchId),
     );
 
-    const isSetUp = vendor?.status === 'approved';
+    const isApproved = vendor?.status === 'approved';
     const quickActions = quickActionsFor(basePath, isStaff);
 
     return (
@@ -81,7 +85,7 @@ export default function Dashboard({ basePath = '/vendor' }) {
             </div>
 
             <div className="px-4 py-5">
-                {!isStaff && !isSetUp ? (
+                {!isStaff && hasNoShop ? (
                     <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-sm">
                         <p className="font-bold text-gray-900">Your shop isn't set up yet</p>
                         <p className="mx-auto mt-2 max-w-xs text-sm text-gray-500">
@@ -89,6 +93,16 @@ export default function Dashboard({ basePath = '/vendor' }) {
                         </p>
                         <Button as={Link} to="/vendor/shop-setup" className="mt-4">
                             Set Up Shop
+                        </Button>
+                    </div>
+                ) : !isStaff && vendor && !isApproved ? (
+                    <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-sm">
+                        <p className="font-bold capitalize text-gray-900">Shop {vendor.status}</p>
+                        <p className="mx-auto mt-2 max-w-xs text-sm text-gray-500">
+                            {VENDOR_STATUS_MESSAGES[vendor.status]}
+                        </p>
+                        <Button as={Link} to="/vendor/profile" variant="outline" className="mt-4">
+                            View Profile
                         </Button>
                     </div>
                 ) : null}

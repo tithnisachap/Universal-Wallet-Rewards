@@ -9,12 +9,7 @@ import LoadingState from '../../components/ui/LoadingState';
 import VendorAvatar from '../../components/VendorAvatar';
 import { useVendorProfile } from '../../queries/vendor';
 import { useLogout } from '../../queries/auth';
-
-const STATUS_MESSAGES = {
-    pending: 'Your shop is pending admin approval. you will be notified via email once there is an update.',
-    rejected: 'Your shop application was rejected. Contact support or resubmit your details.',
-    suspended: 'Your shop has been suspended by an administrator.',
-};
+import { VENDOR_STATUS_MESSAGES as STATUS_MESSAGES } from '../../data/vendorStatusMessages';
 
 export default function Profile() {
     const navigate = useNavigate();

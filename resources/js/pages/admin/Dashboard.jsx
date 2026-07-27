@@ -44,6 +44,8 @@ function DashboardContent({ overview: o }) {
                 <div className="grid grid-cols-2 gap-3">
                     <OverviewTile label="Total vendors" value={o.today.total_vendors} />
                     <OverviewTile label="Pending Approvals" value={o.today.pending_approvals} />
+                    <OverviewTile label="Total Customers" value={o.platform_activity.total_customers} />
+                    <OverviewTile label="Suspended Accounts" value={o.today.suspended_vendors} />
                 </div>
             </div>
 
