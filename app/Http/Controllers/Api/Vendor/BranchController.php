@@ -7,6 +7,7 @@ use App\Http\Requests\Vendor\StoreBranchRequest;
 use App\Http\Requests\Vendor\UpdateBranchRequest;
 use App\Http\Resources\BranchResource;
 use App\Models\Branch;
+use App\Models\User;
 use App\Services\NominatimGeocoder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -92,5 +93,40 @@ class BranchController extends Controller
         });
 
         return new BranchResource($branch->fresh());
+    }
+
+    public function destroy(Branch $branch)
+    {
+        $this->authorize('delete', $branch);
+
+        $vendor = $branch->vendor;
+        $totalBranches = $vendor->branches()->count();
+
+        abort_if($totalBranches === 1, 422, 'You cannot delete your only branch.');
+
+        DB::transaction(function () use ($branch, $vendor) {
+            // Collect user accounts of accepted staff before the cascade deletes their records
+            $staffUserIds = $branch->staff()
+                ->whereNotNull('user_id')
+                ->whereNotNull('accepted_at')
+                ->pluck('user_id');
+
+            // If deleting the main branch, promote the next oldest branch
+            if ($branch->is_main) {
+                $vendor->branches()
+                    ->where('id', '!=', $branch->id)
+                    ->oldest()
+                    ->first()
+                    ?->update(['is_main' => true]);
+            }
+
+            // Delete the branch — cascades branch_staff records automatically
+            $branch->delete();
+
+            // Free the accepted staff user accounts so their emails can be reused
+            User::whereIn('id', $staffUserIds)->delete();
+        });
+
+        return response()->noContent();
     }
 }

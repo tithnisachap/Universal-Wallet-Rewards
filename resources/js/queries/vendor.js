@@ -78,6 +78,18 @@ export function useUpdateBranch(branchId) {
     });
 }
 
+export function useDeleteBranch(branchId) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: () => api.delete(`/vendor/branches/${branchId}`),
+        onSuccess: () => {
+            queryClient.removeQueries({ queryKey: ['vendor', 'branches', branchId] });
+            queryClient.invalidateQueries({ queryKey: ['vendor', 'branches'] });
+        },
+    });
+}
+
 export function useBranchStaff(branchId) {
     return useQuery({
         queryKey: ['vendor', 'branches', branchId, 'staff'],

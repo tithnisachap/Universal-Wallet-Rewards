@@ -71,6 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/branches', [VendorBranchController::class, 'store']);
         Route::get('/branches/{branch}', [VendorBranchController::class, 'show']);
         Route::put('/branches/{branch}', [VendorBranchController::class, 'update']);
+        Route::delete('/branches/{branch}', [VendorBranchController::class, 'destroy']);
 
         Route::get('/branches/{branch}/staff', [BranchStaffController::class, 'index']);
         Route::post('/branches/{branch}/staff', [BranchStaffController::class, 'store']);
