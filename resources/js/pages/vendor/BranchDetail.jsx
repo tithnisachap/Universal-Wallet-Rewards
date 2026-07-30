@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { MapPin, Clock, Phone, Calendar, ShieldCheck, Pencil, Check, UserPlus, X } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { MapPin, Clock, Phone, Calendar, ShieldCheck, Pencil, Check, UserPlus, X, Trash2 } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -14,16 +14,26 @@ import {
     useBranchStaff,
     useInviteBranchStaff,
     useRevokeBranchStaff,
+    useDeleteBranch,
 } from '../../queries/vendor';
 
 export default function BranchDetail() {
     const { branchId } = useParams();
+    const navigate = useNavigate();
     const { data: branch, isLoading, isError, error, refetch } = useVendorBranch(branchId);
     const { data: staff } = useBranchStaff(branchId);
     const inviteStaff = useInviteBranchStaff(branchId);
     const revokeStaff = useRevokeBranchStaff(branchId);
+    const deleteBranch = useDeleteBranch(branchId);
     const [isInviting, setIsInviting] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
+    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+    function handleDelete() {
+        deleteBranch.mutate(undefined, {
+            onSuccess: () => navigate('/vendor/branches'),
+        });
+    }
 
     function handleInvite(e) {
         e.preventDefault();
@@ -174,6 +184,52 @@ export default function BranchDetail() {
                             <Button as={Link} to={`/vendor/branches/${branch.id}/edit`} icon={Pencil} className="mt-5">
                                 Edit Branch Information
                             </Button>
+
+                            <Button
+                                variant="ghost"
+                                icon={Trash2}
+                                className="mt-3 !text-danger-500"
+                                onClick={() => setIsConfirmingDelete(true)}
+                            >
+                                Delete Branch
+                            </Button>
+
+                            <Modal open={isConfirmingDelete} onClose={() => setIsConfirmingDelete(false)} title="Delete Branch">
+                                <p className="text-sm text-gray-600">
+                                    Are you sure you want to delete <span className="font-semibold">{branch.name}</span>? This cannot be undone.
+                                </p>
+                                {staff?.some((m) => m.accepted_at) ? (
+                                    <p className="mt-2 text-sm text-amber-600">
+                                        {staff.filter((m) => m.accepted_at).length} staff member(s) will lose access and their accounts will be removed.
+                                    </p>
+                                ) : null}
+                                {branch.is_main ? (
+                                    <p className="mt-2 text-sm text-amber-600">
+                                        This is your main branch. Another branch will be promoted to main automatically.
+                                    </p>
+                                ) : null}
+                                {deleteBranch.isError ? (
+                                    <p className="mt-2 text-sm text-danger-500">{deleteBranch.error.message}</p>
+                                ) : null}
+                                <div className="mt-4 flex gap-3">
+                                    <Button
+                                        variant="ghost"
+                                        className="flex-1"
+                                        onClick={() => setIsConfirmingDelete(false)}
+                                        disabled={deleteBranch.isPending}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        variant="danger"
+                                        className="flex-1"
+                                        onClick={handleDelete}
+                                        disabled={deleteBranch.isPending}
+                                    >
+                                        {deleteBranch.isPending ? 'Deleting...' : 'Yes, Delete'}
+                                    </Button>
+                                </div>
+                            </Modal>
 
                             <Modal open={isInviting} onClose={() => setIsInviting(false)} title="Invite Branch Staff">
                                 <form onSubmit={handleInvite} className="space-y-4">

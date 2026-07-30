@@ -27,4 +27,9 @@ class BranchPolicy
     {
         return $this->update($user, $branch);
     }
+
+    public function delete(User $user, Branch $branch): bool
+    {
+        return $this->update($user, $branch);
+    }
 }
