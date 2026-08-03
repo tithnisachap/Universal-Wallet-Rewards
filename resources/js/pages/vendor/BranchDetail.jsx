@@ -53,7 +53,7 @@ export default function BranchDetail() {
 
     return (
         <div>
-            <PageHeader title="Branches" />
+            <PageHeader title="Branches" onBack={() => navigate('/vendor/branches')} />
             <div className="px-4 py-4">
                 <QueryState isLoading={isLoading} isError={isError} error={error} onRetry={refetch}>
                     {branch ? (

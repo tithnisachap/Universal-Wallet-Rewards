@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Filter, MapPin, Users, Store } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchInput from '../../components/ui/SearchInput';
@@ -10,12 +10,13 @@ import EmptyState from '../../components/ui/EmptyState';
 import { useVendorBranches, useVendorProfile } from '../../queries/vendor';
 
 export default function Branches() {
+    const navigate = useNavigate();
     const { data: vendor } = useVendorProfile();
     const { data: branches, isLoading, isError, error, refetch } = useVendorBranches();
 
     return (
         <div>
-            <PageHeader title="Branches" />
+            <PageHeader title="Branches" onBack={() => navigate('/vendor/dashboard')} />
             <div className="px-4 py-4">
                 <div className="rounded-2xl bg-gradient-to-br from-brand-700 to-emerald-700 p-5 text-white">
                     <div className="flex items-center gap-3">
