@@ -26,13 +26,13 @@ export default function CreatePromotion() {
                 starts_at: form.startDate,
                 ends_at: form.endDate,
             },
-            { onSuccess: () => navigate('/vendor/promotions') },
+            { onSuccess: () => navigate('/vendor/promotions', { replace: true }) },
         );
     }
 
     return (
         <div>
-            <PageHeader title="Create Promotion" onBack={() => (step === 0 ? navigate(-1) : setStep(0))} />
+            <PageHeader title="Create Promotion" onBack={() => (step === 0 ? navigate('/vendor/promotions', { replace: true }) : setStep(0))} />
             <Stepper steps={['Configure', 'Preview']} current={step} />
 
             <div className="px-4 pb-6">

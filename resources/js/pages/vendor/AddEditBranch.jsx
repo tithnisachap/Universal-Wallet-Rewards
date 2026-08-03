@@ -62,7 +62,7 @@ export default function AddEditBranch() {
         if (photoInputRef.current?.files[0]) payload.set('photo', photoInputRef.current.files[0]);
 
         mutation.mutate(payload, {
-            onSuccess: () => navigate(editing ? `/vendor/branches/${branchId}` : '/vendor/branches'),
+            onSuccess: () => navigate(editing ? `/vendor/branches/${branchId}` : '/vendor/branches', { replace: true }),
         });
     }
 

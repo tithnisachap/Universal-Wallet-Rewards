@@ -29,7 +29,7 @@ export default function EditProfile() {
         if (logoInputRef.current?.files[0]) payload.set('logo', logoInputRef.current.files[0]);
 
         updateProfile.mutate(payload, {
-            onSuccess: () => navigate('/vendor/profile'),
+            onSuccess: () => navigate('/vendor/profile', { replace: true }),
         });
     }
 
