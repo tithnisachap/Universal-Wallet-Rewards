@@ -4,7 +4,6 @@ import { Plus, Percent, Megaphone, Tag, Star } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
 import VendorAvatar from '../../components/VendorAvatar';
@@ -42,13 +41,6 @@ export default function Promotions({ basePath = '/vendor' }) {
             <PageHeader
                 title="Promotion"
                 onBack={() => navigate(`${basePath}/dashboard`)}
-                right={
-                    isStaff ? null : (
-                        <Button as={Link} to="/vendor/promotions/create" size="sm" icon={Plus} className="w-auto">
-                            Create Promotion
-                        </Button>
-                    )
-                }
             />
             <div className="px-4 py-4">
                 <Card className="mb-4 flex items-center gap-3">
@@ -59,7 +51,17 @@ export default function Promotions({ basePath = '/vendor' }) {
                     </div>
                 </Card>
 
-                <p className="mb-2 font-bold text-gray-900">Promotions</p>
+                <div className="mb-2 flex items-center justify-between">
+                    <p className="font-bold text-gray-900">Promotion List</p>
+                    {!isStaff ? (
+                        <Link
+                            to="/vendor/promotions/create"
+                            className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-sm font-semibold text-white"
+                        >
+                            <Plus size={14} /> Create Promotion
+                        </Link>
+                    ) : null}
+                </div>
                 <PillTabs options={filters} value={filter} onChange={setFilter} className="mb-4 rounded-xl bg-white p-1 shadow-sm" />
 
                 <div className="space-y-3">

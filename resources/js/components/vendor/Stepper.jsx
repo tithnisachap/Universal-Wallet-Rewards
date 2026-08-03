@@ -3,7 +3,7 @@ import { cn } from '../../lib/cn';
 
 export default function Stepper({ steps, current }) {
     return (
-        <div className="flex items-center px-4 py-4">
+        <div className="flex justify-center px-4 py-4"><div className="flex w-56 items-center">
             {steps.map((step, i) => (
                 <div key={step} className="flex flex-1 items-center">
                     <div className="flex flex-col items-center gap-1">
@@ -22,6 +22,6 @@ export default function Stepper({ steps, current }) {
                     ) : null}
                 </div>
             ))}
-        </div>
+        </div></div>
     );
 }

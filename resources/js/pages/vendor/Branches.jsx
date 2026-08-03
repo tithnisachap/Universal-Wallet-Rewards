@@ -1,9 +1,9 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Filter, MapPin, Users, Store } from 'lucide-react';
+import { Plus, MapPin, Users, Store } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchInput from '../../components/ui/SearchInput';
 import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
@@ -11,8 +11,10 @@ import { useVendorBranches, useVendorProfile } from '../../queries/vendor';
 
 export default function Branches() {
     const navigate = useNavigate();
+    const [search, setSearch] = useState('');
     const { data: vendor } = useVendorProfile();
     const { data: branches, isLoading, isError, error, refetch } = useVendorBranches();
+    const filtered = branches?.filter((b) => b.name.toLowerCase().includes(search.toLowerCase())) ?? [];
 
     return (
         <div>
@@ -33,18 +35,22 @@ export default function Branches() {
                     </p>
                 </div>
 
-                <div className="mt-4 flex gap-2">
-                    <SearchInput placeholder="Search branches..." className="flex-1" />
-                    <button className="flex items-center gap-2 rounded-xl bg-white px-4 text-sm font-medium text-gray-700 shadow-sm">
-                        <Filter size={16} /> Filter
-                    </button>
+                <div className="mt-4">
+                    <SearchInput
+                        placeholder="Search branches..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
                 </div>
 
                 <div className="mb-3 mt-5 flex items-center justify-between">
                     <p className="font-bold text-gray-900">Branch List</p>
-                    <Button as={Link} to="/vendor/branches/new" size="sm" icon={Plus} className="w-auto">
-                        Add Branch
-                    </Button>
+                    <Link
+                        to="/vendor/branches/new"
+                        className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-sm font-semibold text-white"
+                    >
+                        <Plus size={14} /> Add Branch
+                    </Link>
                 </div>
 
                 <div className="space-y-3">
@@ -53,10 +59,10 @@ export default function Branches() {
                         isError={isError}
                         error={error}
                         onRetry={refetch}
-                        isEmpty={branches?.length === 0}
-                        emptyState={<EmptyState icon={Store} title="No branches yet" description="Add your first branch to get started." />}
+                        isEmpty={filtered.length === 0}
+                        emptyState={<EmptyState icon={Store} title="No branches found" description={search ? 'Try a different search term.' : 'Add your first branch to get started.'} />}
                     >
-                        {branches?.map((branch) => (
+                        {filtered.map((branch) => (
                             <Link key={branch.id} to={`/vendor/branches/${branch.id}`} className="block">
                                 <Card className="flex items-center gap-3">
                                     {branch.photo_path ? (

@@ -71,7 +71,7 @@ export default function PromotionForm({ value, onChange }) {
                     <button
                         type="button"
                         onClick={() => set('amount', Math.max(1, value.amount - (value.type === 'stamps' ? 1 : 10)))}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600"
+                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white"
                     >
                         <Minus size={16} />
                     </button>

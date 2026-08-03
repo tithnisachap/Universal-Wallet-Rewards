@@ -124,7 +124,6 @@ export function useAdminList() {
     return useQuery({
         queryKey: ['admin', 'admins'],
         queryFn: () => api.get('/admin/admins'),
-        select: (res) => res.data,
     });
 }
 
