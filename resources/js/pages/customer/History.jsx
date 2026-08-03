@@ -23,7 +23,7 @@ export default function History() {
 
     return (
         <div>
-            <PageHeader title="Universal Wallet" />
+            <PageHeader title="Activity" />
             <div className="px-4 py-4">
                 <div className="mb-4 flex items-center gap-3">
                     <VendorAvatar vendor={vendor} />
