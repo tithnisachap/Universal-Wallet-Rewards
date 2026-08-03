@@ -7,7 +7,7 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Switch from '../../components/ui/Switch';
 import SearchInput from '../../components/ui/SearchInput';
-import { Field, Input } from '../../components/ui/Field';
+import { Field, Select } from '../../components/ui/Field';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
@@ -18,6 +18,7 @@ import {
     useReviewVendor,
     usePlatformSettings,
     useUpdatePlatformSettings,
+    useAdminList,
 } from '../../queries/admin';
 
 const statusTabs = [
@@ -48,6 +49,7 @@ export default function VendorApprovals() {
 
     const { data: settings } = usePlatformSettings();
     const updateSettings = useUpdatePlatformSettings();
+    const { data: admins } = useAdminList();
     const [supportEmail, setSupportEmail] = useState('');
 
     useEffect(() => {
@@ -83,14 +85,18 @@ export default function VendorApprovals() {
                     Shown to a vendor if their shop is suspended, so they know where to appeal.
                 </p>
                 <div className="flex gap-2">
-                    <Field>
-                        <Input
-                            type="email"
-                            placeholder="support@example.com"
+                    <Field className="flex-1">
+                        <Select
                             value={supportEmail}
                             onChange={(e) => setSupportEmail(e.target.value)}
-                            className="flex-1"
-                        />
+                        >
+                            <option value="">— None —</option>
+                            {admins?.map((admin) => (
+                                <option key={admin.id} value={admin.email}>
+                                    {admin.name} ({admin.email})
+                                </option>
+                            ))}
+                        </Select>
                     </Field>
                     <Button
                         size="sm"

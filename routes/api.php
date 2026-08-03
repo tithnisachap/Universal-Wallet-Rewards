@@ -121,5 +121,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/settings', [AdminSettingsController::class, 'show']);
         Route::put('/settings', [AdminSettingsController::class, 'update']);
+        Route::get('/admins', [AdminSettingsController::class, 'admins']);
     });
 });

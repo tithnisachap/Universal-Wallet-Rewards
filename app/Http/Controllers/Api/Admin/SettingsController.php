@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PlatformSetting;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
@@ -24,6 +25,15 @@ class SettingsController extends Controller
         $settings->update($validated);
 
         return response()->json(['data' => $this->present($settings)]);
+    }
+
+    public function admins()
+    {
+        return response()->json([
+            'data' => User::where('role', 'admin')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email']),
+        ]);
     }
 
     private function present(PlatformSetting $settings): array

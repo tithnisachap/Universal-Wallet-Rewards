@@ -159,7 +159,7 @@ export default function BranchDetail() {
                                                 </div>
                                                 <div className="flex shrink-0 items-center gap-2">
                                                     <Badge tone={member.accepted_at ? 'approved' : 'pending'}>
-                                                        {member.accepted_at ? 'Active' : 'Pending'}
+                                                        {member.accepted_at ? 'Active' : 'Invited'}
                                                     </Badge>
                                                     <button
                                                         onClick={() => revokeStaff.mutate(member.id)}
