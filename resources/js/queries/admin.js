@@ -98,6 +98,14 @@ export function useAdminAnalytics(period = 'month') {
     });
 }
 
+export function useAdminList() {
+    return useQuery({
+        queryKey: ['admin', 'admins'],
+        queryFn: () => api.get('/admin/admins'),
+        select: (res) => res.data,
+    });
+}
+
 export function usePlatformSettings() {
     return useQuery({
         queryKey: ['admin', 'settings'],
