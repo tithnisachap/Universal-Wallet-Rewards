@@ -72,12 +72,18 @@ export function useClaimReward(vendorId) {
     });
 }
 
-export function useNearbyBranches({ lat, lng, category, radiusKm } = {}) {
+export function useNearbyBranches({ lat, lng, category, search, radiusKm } = {}) {
     return useQuery({
-        queryKey: ['customer', 'branches', 'nearby', { lat, lng, category, radiusKm }],
+        queryKey: ['customer', 'branches', 'nearby', { lat, lng, category, search, radiusKm }],
         queryFn: () =>
             api.get('/customer/branches/nearby', {
-                params: { lat, lng, category: category || undefined, radius_km: radiusKm || undefined },
+                params: {
+                    lat,
+                    lng,
+                    category: category || undefined,
+                    search: search || undefined,
+                    radius_km: radiusKm || undefined,
+                },
             }),
         enabled: Boolean(lat) && Boolean(lng),
     });

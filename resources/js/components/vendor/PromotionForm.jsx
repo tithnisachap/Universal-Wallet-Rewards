@@ -1,10 +1,9 @@
-import { Coffee, ShoppingBag, Percent, Minus, Plus, Star, DollarSign } from 'lucide-react';
+import { Tag, Percent, Minus, Plus, Star, DollarSign } from 'lucide-react';
 import { Field, Input, Textarea } from '../ui/Field';
 
 const categories = [
-    { value: 'Drinks', label: 'Drinks', icon: Coffee },
-    { value: 'Food', label: 'Food', icon: ShoppingBag },
-    { value: 'Discount', label: 'Discount', icon: Percent },
+    { value: 'Item', label: 'Item', icon: Tag },
+    { value: 'Promotion', label: 'Promotion', icon: Percent },
 ];
 
 export default function PromotionForm({ value, onChange }) {
@@ -129,7 +128,7 @@ export default function PromotionForm({ value, onChange }) {
 
 export const defaultPromotionForm = {
     type: 'stamps',
-    category: 'Drinks',
+    category: 'Item',
     title: '',
     description: '',
     amount: 10,

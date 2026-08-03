@@ -2,6 +2,7 @@ import { Navigate, createBrowserRouter } from 'react-router-dom';
 
 import RequireAuth from './components/RequireAuth';
 
+import Landing from './pages/Landing';
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 import LoginAccountPicker from './pages/auth/LoginAccountPicker';
@@ -46,7 +47,7 @@ import AdminAnalytics from './pages/admin/Analytics';
 import AdminProfile from './pages/admin/Profile';
 
 export const router = createBrowserRouter([
-    { path: '/', element: <Navigate to="/login" replace /> },
+    { path: '/', element: <Landing /> },
     { path: '/auth/google/complete', element: <GoogleCallback /> },
 
     { path: '/login', element: <Login /> },

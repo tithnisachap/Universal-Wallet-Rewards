@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Coffee, Percent, Cake, Megaphone, Tag, Star } from 'lucide-react';
+import { Plus, Percent, Megaphone, Tag, Star } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -19,9 +19,8 @@ const filters = [
 ];
 
 const categoryIcons = {
-    Drinks: Coffee,
-    Food: Cake,
-    Discount: Percent,
+    Item: Tag,
+    Promotion: Percent,
 };
 
 function matchesFilter(promo, filter) {

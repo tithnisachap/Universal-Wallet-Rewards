@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { Ticket, QrCode, Navigation, User } from 'lucide-react';
 import BottomNav from '../components/ui/BottomNav';
+import TopBar from '../components/ui/TopBar';
 
 const navItems = [
     { to: '/customer/coupons', label: 'Coupons', icon: Ticket },
@@ -12,6 +13,7 @@ const navItems = [
 export default function CustomerLayout() {
     return (
         <div className="flex min-h-screen flex-col pb-20">
+            <TopBar panel="Customer" />
             <div className="flex-1">
                 <Outlet />
             </div>

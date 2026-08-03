@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Coffee, UtensilsCrossed, ShoppingBag, MapPin, MapPinOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import SearchInput from '../../components/ui/SearchInput';
@@ -47,6 +48,8 @@ function RecenterMap({ center }) {
 export default function Location() {
     const [category, setCategory] = useState('Coffee Shop');
     const [coords, setCoords] = useState(DEFAULT_COORDS);
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
 
     useEffect(() => {
         if (!navigator.geolocation) return;
@@ -58,15 +61,21 @@ export default function Location() {
         );
     }, []);
 
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(search), 350);
+        return () => clearTimeout(t);
+    }, [search]);
+
     const { data: branches, isLoading, isError, error, refetch } = useNearbyBranches({
         lat: coords.lat,
         lng: coords.lng,
-        category,
+        category: debouncedSearch ? undefined : category,
+        search: debouncedSearch || undefined,
     });
 
     return (
-        <div className="flex h-screen flex-col">
-            <div className="relative h-72 shrink-0 overflow-hidden">
+        <div className="flex h-[calc(100svh-3rem)] flex-col">
+            <div className="relative h-64 shrink-0 overflow-hidden">
                 <MapContainer center={coords} zoom={14} className="h-full w-full" zoomControl={false}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -85,10 +94,20 @@ export default function Location() {
 
                 <div className="pointer-events-none absolute inset-x-4 top-4 z-[1001]">
                     <div className="pointer-events-auto">
-                        <SearchInput placeholder="Search nearby stores" className="shadow-md" />
+                        <SearchInput
+                            placeholder="Search nearby stores"
+                            className="shadow-md"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
                         <div className="mt-3 flex gap-2">
                             {categories.map((cat) => (
-                                <Chip key={cat.value} icon={cat.icon} active={category === cat.value} onClick={() => setCategory(cat.value)}>
+                                <Chip
+                                    key={cat.value}
+                                    icon={cat.icon}
+                                    active={!debouncedSearch && category === cat.value}
+                                    onClick={() => { setSearch(''); setCategory(cat.value); }}
+                                >
                                     {cat.label}
                                 </Chip>
                             ))}
@@ -97,15 +116,12 @@ export default function Location() {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto rounded-t-3xl bg-white px-4 pb-24 pt-5 shadow-[0_-8px_20px_rgba(0,0,0,0.05)]">
-                <div className="mb-3 flex items-center justify-between">
-                    <div>
-                        <p className="font-bold text-gray-900">Nearby Stores</p>
-                        <p className="text-sm text-gray-500">
-                            {branches ? `Found ${branches.length} stores in your area` : 'Searching your area...'}
-                        </p>
-                    </div>
-                    <span className="text-sm font-semibold text-brand-600">View all</span>
+            <div className="min-h-0 flex-1 overflow-y-auto rounded-t-3xl bg-white px-4 pb-24 pt-5 shadow-[0_-8px_20px_rgba(0,0,0,0.05)]">
+                <div className="mb-3">
+                    <p className="font-bold text-gray-900">Nearby Stores</p>
+                    <p className="text-sm text-gray-500">
+                        {branches ? `Found ${branches.length} store${branches.length !== 1 ? 's' : ''} in your area` : 'Searching your area...'}
+                    </p>
                 </div>
                 <div className="space-y-3">
                     <QueryState
@@ -114,18 +130,28 @@ export default function Location() {
                         error={error}
                         onRetry={refetch}
                         isEmpty={branches?.length === 0}
-                        emptyState={<EmptyState icon={MapPinOff} title="No stores nearby" description="Try a different category or search a wider area." />}
+                        emptyState={<EmptyState icon={MapPinOff} title="No stores nearby" description="Try a different category or search term." />}
                     >
                         {branches?.map((branch) => (
-                            <Card key={branch.id} className="flex items-center gap-3">
-                                <div className="h-12 w-12 shrink-0 rounded-xl bg-gray-800" />
-                                <div className="flex-1">
-                                    <p className="font-semibold text-gray-900">{branch.vendor_name}</p>
-                                    <p className="flex items-center gap-1 text-xs text-gray-500">
-                                        <MapPin size={12} /> {branch.distance_km} km away
-                                    </p>
-                                </div>
-                            </Card>
+                            <Link key={branch.id} to={`/customer/vendors/${branch.vendor_id}/branches`} className="block">
+                                <Card className="flex items-center gap-3">
+                                    {branch.photo_path ? (
+                                        <img
+                                            src={`/storage/${branch.photo_path}`}
+                                            alt={branch.vendor_name}
+                                            className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                                        />
+                                    ) : (
+                                        <div className="h-12 w-12 shrink-0 rounded-xl bg-gray-800" />
+                                    )}
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-gray-900">{branch.vendor_name}</p>
+                                        <p className="flex items-center gap-1 text-xs text-gray-500">
+                                            <MapPin size={12} /> {branch.distance_km} km away
+                                        </p>
+                                    </div>
+                                </Card>
+                            </Link>
                         ))}
                     </QueryState>
                 </div>

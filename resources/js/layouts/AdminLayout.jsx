@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { Home, Store, Users, BarChart3 } from 'lucide-react';
 import BottomNav from '../components/ui/BottomNav';
+import TopBar from '../components/ui/TopBar';
 
 const navItems = [
     { to: '/admin/dashboard', label: 'Home', icon: Home, end: true },
@@ -12,6 +13,7 @@ const navItems = [
 export default function AdminLayout() {
     return (
         <div className="flex min-h-screen flex-col pb-20">
+            <TopBar panel="Admin" />
             <div className="flex-1">
                 <Outlet />
             </div>

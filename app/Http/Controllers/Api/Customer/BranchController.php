@@ -36,6 +36,7 @@ class BranchController extends Controller
             'lng' => ['required', 'numeric', 'between:-180,180'],
             'radius_km' => ['nullable', 'numeric', 'min:0.1', 'max:100'],
             'category' => ['nullable', 'string'],
+            'search' => ['nullable', 'string', 'max:100'],
         ]);
 
         $lat = $request->float('lat');
@@ -53,6 +54,7 @@ class BranchController extends Controller
             ->whereNotNull('branches.latitude')
             ->whereNotNull('branches.longitude')
             ->when($request->filled('category'), fn ($query) => $query->where('vendors.category', $request->string('category')))
+            ->when($request->filled('search'), fn ($query) => $query->where('vendors.business_name', 'ilike', '%' . $request->string('search') . '%'))
             ->select('branches.*', 'vendors.business_name as vendor_name')
             ->selectRaw("$haversine as distance_km", [$lat, $lng, $lat])
             ->orderBy('distance_km')
