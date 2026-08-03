@@ -67,42 +67,50 @@ export default function PromotionForm({ value, onChange }) {
             </Field>
 
             <Field label={value.type === 'stamps' ? 'Required Stamps' : 'Required Points'}>
-                <div className="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2">
-                    <button
-                        type="button"
-                        onClick={() => set('amount', Math.max(1, value.amount - (value.type === 'stamps' ? 1 : 10)))}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white"
-                    >
-                        <Minus size={16} />
-                    </button>
-                    <input
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
-                        max={value.type === 'stamps' ? 30 : undefined}
-                        value={value.amount}
-                        onChange={(e) => {
-                            const raw = Number(e.target.value) || 1;
-                            const clamped = value.type === 'stamps' ? Math.min(30, Math.max(1, raw)) : Math.max(1, raw);
-                            set('amount', clamped);
-                        }}
-                        className="w-20 border-none text-center text-2xl font-bold text-gray-900 [appearance:textfield] focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    />
-                    <button
-                        type="button"
-                        onClick={() =>
-                            set(
-                                'amount',
-                                value.type === 'stamps'
-                                    ? Math.min(30, value.amount + 1)
-                                    : value.amount + 10,
-                            )
-                        }
-                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white"
-                    >
-                        <Plus size={16} />
-                    </button>
-                </div>
+                {(() => {
+                    const atMin = value.amount <= 1;
+                    const atMax = value.type === 'stamps' && value.amount >= 30;
+                    return (
+                        <div className="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2">
+                            <button
+                                type="button"
+                                onClick={() => set('amount', Math.max(1, value.amount - (value.type === 'stamps' ? 1 : 10)))}
+                                disabled={atMin}
+                                className={`flex h-9 w-9 items-center justify-center rounded-lg text-white ${atMin ? 'bg-brand-300' : 'bg-brand-600'}`}
+                            >
+                                <Minus size={16} />
+                            </button>
+                            <input
+                                type="number"
+                                inputMode="numeric"
+                                min={1}
+                                max={value.type === 'stamps' ? 30 : undefined}
+                                value={value.amount}
+                                onChange={(e) => {
+                                    const raw = Number(e.target.value) || 1;
+                                    const clamped = value.type === 'stamps' ? Math.min(30, Math.max(1, raw)) : Math.max(1, raw);
+                                    set('amount', clamped);
+                                }}
+                                className="w-20 border-none text-center text-2xl font-bold text-gray-900 [appearance:textfield] focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            />
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    set(
+                                        'amount',
+                                        value.type === 'stamps'
+                                            ? Math.min(30, value.amount + 1)
+                                            : value.amount + 10,
+                                    )
+                                }
+                                disabled={atMax}
+                                className={`flex h-9 w-9 items-center justify-center rounded-lg text-white ${atMax ? 'bg-brand-300' : 'bg-brand-600'}`}
+                            >
+                                <Plus size={16} />
+                            </button>
+                        </div>
+                    );
+                })()}
                 <p className="mt-1 text-xs text-gray-400">
                     {value.type === 'stamps'
                         ? 'Set how many stamps are needed to redeem this promotion (max 30).'
