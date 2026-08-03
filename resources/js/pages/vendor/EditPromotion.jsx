@@ -46,13 +46,13 @@ export default function EditPromotion() {
                 starts_at: form.startDate,
                 ends_at: form.endDate,
             },
-            { onSuccess: () => navigate('/vendor/promotions') },
+            { onSuccess: () => navigate('/vendor/promotions', { replace: true }) },
         );
     }
 
     return (
         <div>
-            <PageHeader title="Edit Promotion" onBack={() => (editing ? setEditing(false) : navigate(-1))} />
+            <PageHeader title="Edit Promotion" onBack={() => (editing ? setEditing(false) : navigate('/vendor/promotions', { replace: true }))} />
             <div className="px-4 py-4 pb-6">
                 <QueryState isLoading={isLoading} isError={isError} error={error} onRetry={refetch}>
                     {form ? (
@@ -68,7 +68,7 @@ export default function EditPromotion() {
                             ) : null}
 
                             <div className="mt-6 flex gap-3">
-                                <Button variant="outline" onClick={() => (editing ? setEditing(false) : navigate(-1))}>
+                                <Button variant="outline" onClick={() => (editing ? setEditing(false) : navigate('/vendor/promotions', { replace: true }))}>
                                     Back
                                 </Button>
                                 {editing ? (
