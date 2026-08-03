@@ -66,10 +66,12 @@ export default function AddEditBranch() {
         });
     }
 
+    const backRoute = editing ? `/vendor/branches/${branchId}` : '/vendor/branches';
+
     if (editing && isLoading) {
         return (
             <div>
-                <PageHeader title="Edit Branch" />
+                <PageHeader title="Edit Branch" onBack={() => navigate(backRoute)} />
                 <QueryState isLoading />
             </div>
         );
@@ -78,7 +80,7 @@ export default function AddEditBranch() {
     if (editing && isError) {
         return (
             <div>
-                <PageHeader title="Edit Branch" />
+                <PageHeader title="Edit Branch" onBack={() => navigate(backRoute)} />
                 <div className="px-4 py-4">
                     <QueryState isError error={error} onRetry={refetch} />
                 </div>
@@ -88,7 +90,7 @@ export default function AddEditBranch() {
 
     return (
         <div>
-            <PageHeader title={editing ? 'Edit Branch' : 'Add Branch'} />
+            <PageHeader title={editing ? 'Edit Branch' : 'Add Branch'} onBack={() => navigate(backRoute)} />
             <form ref={formRef} className="space-y-5 px-4 py-4" onSubmit={handleSubmit}>
                 <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-gray-200 py-8">
                     <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-100 text-brand-600">
