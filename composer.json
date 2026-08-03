@@ -11,6 +11,7 @@
         "laravel/sanctum": "^4.3",
         "laravel/socialite": "^5.29",
         "laravel/tinker": "^2.10.1",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "sentry/sentry-laravel": "^4.27"
     },
     "require-dev": {
