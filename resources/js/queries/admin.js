@@ -91,6 +91,28 @@ export function useAdminCustomer(customerId) {
     });
 }
 
+export function useSuspendCustomer(customerId) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: () => api.post(`/admin/customers/${customerId}/suspend`),
+        onSuccess: (data) => {
+            queryClient.setQueryData(['admin', 'customers', customerId], data);
+            queryClient.invalidateQueries({ queryKey: ['admin', 'customers'] });
+        },
+    });
+}
+
+export function useReinstateCustomer(customerId) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: () => api.post(`/admin/customers/${customerId}/reinstate`),
+        onSuccess: (data) => {
+            queryClient.setQueryData(['admin', 'customers', customerId], data);
+            queryClient.invalidateQueries({ queryKey: ['admin', 'customers'] });
+        },
+    });
+}
+
 export function useAdminAnalytics(period = 'month') {
     return useQuery({
         queryKey: ['admin', 'analytics', { period }],

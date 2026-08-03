@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Store } from 'lucide-react';
 import { SegmentedControl, PillTabs } from '../../components/ui/Tabs';
 import Card from '../../components/ui/Card';
@@ -28,14 +28,23 @@ const statusTabs = [
 ];
 
 export default function VendorApprovals() {
-    const [topTab, setTopTab] = useState('applications');
-    const [statusTab, setStatusTab] = useState('pending');
-    const [page, setPage] = useState(1);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const topTab = searchParams.get('tab') ?? 'applications';
+    const statusTab = searchParams.get('status') ?? 'pending';
+    const page = Number(searchParams.get('page') ?? '1');
     const status = topTab === 'history' ? 'history' : statusTab;
 
-    useEffect(() => {
-        setPage(1);
-    }, [status]);
+    function setTopTab(tab) {
+        setSearchParams({ tab }, { replace: true });
+    }
+
+    function setStatusTab(s) {
+        setSearchParams({ tab: topTab, status: s }, { replace: true });
+    }
+
+    function setPage(p) {
+        setSearchParams({ tab: topTab, status: statusTab, page: String(p) }, { replace: true });
+    }
 
     const { data, isLoading, isError, error, refetch } = useAdminVendors(status, { page });
     const vendors = data?.data;
