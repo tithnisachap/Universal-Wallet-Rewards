@@ -45,7 +45,7 @@ class ProfileController extends Controller
         $this->authorize('create', Vendor::class);
 
         $logoPath = $request->hasFile('logo')
-            ? $request->file('logo')->store('vendor-logos', 'spaces')
+            ? $request->file('logo')->storePublicly('vendor-logos', 'spaces')
             : null;
 
         $autoApprove = PlatformSetting::current()->auto_approve_vendors;
@@ -94,7 +94,7 @@ class ProfileController extends Controller
         $this->authorize('update', $vendor);
 
         if ($request->hasFile('logo')) {
-            $vendor->logo_path = $request->file('logo')->store('vendor-logos', 'spaces');
+            $vendor->logo_path = $request->file('logo')->storePublicly('vendor-logos', 'spaces');
         }
 
         $vendor->fill($request->safe()->except('logo'));

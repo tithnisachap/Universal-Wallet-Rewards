@@ -122,6 +122,7 @@ export default function Profile() {
                 right={
                     <Link
                         to="/vendor/profile/edit"
+                        replace
                         className="flex items-center gap-1 text-sm font-semibold text-brand-600"
                     >
                         <Pencil size={14} /> Edit
