@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, MapPin, Users, Store } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
@@ -7,14 +7,22 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
+import Pagination from '../../components/ui/Pagination';
 import { useVendorBranches, useVendorProfile } from '../../queries/vendor';
+
+const PAGE_SIZE = 8;
 
 export default function Branches() {
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
     const { data: vendor } = useVendorProfile();
     const { data: branches, isLoading, isError, error, refetch } = useVendorBranches();
     const filtered = branches?.filter((b) => b.name.toLowerCase().includes(search.toLowerCase())) ?? [];
+    const pagedBranches = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const paginationMeta = { current_page: page, last_page: Math.ceil(filtered.length / PAGE_SIZE) };
+
+    useEffect(() => { setPage(1); }, [search]);
 
     return (
         <div>
@@ -62,7 +70,7 @@ export default function Branches() {
                         isEmpty={filtered.length === 0}
                         emptyState={<EmptyState icon={Store} title="No branches found" description={search ? 'Try a different search term.' : 'Add your first branch to get started.'} />}
                     >
-                        {filtered.map((branch) => (
+                        {pagedBranches.map((branch) => (
                             <Link key={branch.id} to={`/vendor/branches/${branch.id}`} className="block">
                                 <Card className="flex items-center gap-3">
                                     {branch.photo_url ? (
@@ -90,6 +98,8 @@ export default function Branches() {
                         ))}
                     </QueryState>
                 </div>
+
+                <Pagination meta={paginationMeta} onPageChange={setPage} />
 
                 <div className="mt-4 flex items-start gap-3 rounded-2xl bg-brand-50 p-4">
                     <Users size={20} className="mt-0.5 shrink-0 text-brand-600" />

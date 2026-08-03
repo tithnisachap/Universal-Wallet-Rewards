@@ -11,7 +11,7 @@ export function useAdminDashboard() {
 export function useAdminVendors(status = 'pending', { page = 1 } = {}) {
     return useQuery({
         queryKey: ['admin', 'vendors', { status, page }],
-        queryFn: () => getPaginated('/admin/vendors', { params: { status, page, per_page: 10 } }),
+        queryFn: () => getPaginated('/admin/vendors', { params: { status, page, per_page: 8 } }),
         placeholderData: (previous) => previous,
     });
 }
@@ -66,7 +66,7 @@ export function useAdminVendorDirectory({ search = '', page = 1 } = {}) {
         queryKey: ['admin', 'vendors', 'directory', { search, page }],
         queryFn: () =>
             getPaginated('/admin/vendors', {
-                params: { status: 'all', search: search || undefined, page, per_page: 10 },
+                params: { status: 'all', search: search || undefined, page, per_page: 8 },
             }),
         placeholderData: (previous) => previous,
     });
@@ -77,7 +77,7 @@ export function useAdminCustomers({ search = '', page = 1 } = {}) {
         queryKey: ['admin', 'customers', { search, page }],
         queryFn: () =>
             getPaginated('/admin/customers', {
-                params: { search: search || undefined, page, per_page: 10 },
+                params: { search: search || undefined, page, per_page: 8 },
             }),
         placeholderData: (previous) => previous,
     });

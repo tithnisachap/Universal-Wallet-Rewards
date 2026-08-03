@@ -8,7 +8,10 @@ import Chip from '../../components/ui/Chip';
 import Card from '../../components/ui/Card';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
+import Pagination from '../../components/ui/Pagination';
 import { useNearbyBranches } from '../../queries/customer';
+
+const PAGE_SIZE = 8;
 
 // Phnom Penh city center — used whenever the browser won't share a real
 // location (permission denied, unsupported, etc.) so the screen still works.
@@ -50,6 +53,7 @@ export default function Location() {
     const [coords, setCoords] = useState(DEFAULT_COORDS);
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         if (!navigator.geolocation) return;
@@ -66,12 +70,19 @@ export default function Location() {
         return () => clearTimeout(t);
     }, [search]);
 
+    useEffect(() => { setPage(1); }, [debouncedSearch, category]);
+
     const { data: branches, isLoading, isError, error, refetch } = useNearbyBranches({
         lat: coords.lat,
         lng: coords.lng,
         category: debouncedSearch ? undefined : category,
         search: debouncedSearch || undefined,
     });
+
+    const pagedBranches = branches?.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const paginationMeta = branches
+        ? { current_page: page, last_page: Math.ceil(branches.length / PAGE_SIZE) }
+        : null;
 
     return (
         <div className="flex h-[calc(100svh-3rem)] flex-col">
@@ -132,7 +143,7 @@ export default function Location() {
                         isEmpty={branches?.length === 0}
                         emptyState={<EmptyState icon={MapPinOff} title="No stores nearby" description="Try a different category or search term." />}
                     >
-                        {branches?.map((branch) => (
+                        {pagedBranches?.map((branch) => (
                             <Link key={branch.id} to={`/customer/vendors/${branch.vendor_id}/branches`} className="block">
                                 <Card className="flex items-center gap-3">
                                     {branch.photo_url ? (
@@ -155,6 +166,7 @@ export default function Location() {
                         ))}
                     </QueryState>
                 </div>
+                <Pagination meta={paginationMeta} onPageChange={setPage} />
             </div>
         </div>
     );

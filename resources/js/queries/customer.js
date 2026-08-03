@@ -23,7 +23,7 @@ export function useUpdateCustomerProfile() {
 export function useVendorDirectory({ search = '', page = 1 } = {}) {
     return useQuery({
         queryKey: ['customer', 'vendors', { search, page }],
-        queryFn: () => getPaginated('/customer/vendors', { params: { search: search || undefined, page } }),
+        queryFn: () => getPaginated('/customer/vendors', { params: { search: search || undefined, page, per_page: 8 } }),
         placeholderData: (previous) => previous,
     });
 }

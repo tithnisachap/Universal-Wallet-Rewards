@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Percent, Megaphone, Tag, Star } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
@@ -6,8 +6,11 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
+import Pagination from '../../components/ui/Pagination';
 import VendorAvatar from '../../components/VendorAvatar';
 import { PillTabs } from '../../components/ui/Tabs';
+
+const PAGE_SIZE = 8;
 import { useVendorPromotions, useVendorProfile } from '../../queries/vendor';
 
 const filters = [
@@ -32,9 +35,14 @@ export default function Promotions({ basePath = '/vendor' }) {
     const isStaff = basePath === '/staff';
     const navigate = useNavigate();
     const [filter, setFilter] = useState('all');
+    const [page, setPage] = useState(1);
     const { data: vendor } = useVendorProfile();
     const { data: promotions, isLoading, isError, error, refetch } = useVendorPromotions();
     const list = promotions?.filter((p) => matchesFilter(p, filter)) ?? [];
+    const pagedList = list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const paginationMeta = { current_page: page, last_page: Math.ceil(list.length / PAGE_SIZE) };
+
+    useEffect(() => { setPage(1); }, [filter]);
 
     return (
         <div>
@@ -79,7 +87,7 @@ export default function Promotions({ basePath = '/vendor' }) {
                             />
                         }
                     >
-                        {list.map((promo) => {
+                        {pagedList.map((promo) => {
                             const Icon = categoryIcons[promo.category] ?? Tag;
                             const content = (
                                 <Card className="flex items-center gap-3">
@@ -122,6 +130,7 @@ export default function Promotions({ basePath = '/vendor' }) {
                         })}
                     </QueryState>
                 </div>
+                <Pagination meta={paginationMeta} onPageChange={setPage} />
             </div>
         </div>
     );
