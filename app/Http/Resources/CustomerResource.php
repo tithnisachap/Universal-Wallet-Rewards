@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\CustomerLoyalty;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class CustomerResource extends JsonResource
 {
@@ -30,7 +31,7 @@ class CustomerResource extends JsonResource
                 fn () => $this->vendor_loyalty_list->map(fn (CustomerLoyalty $loyalty) => [
                     'vendor_id' => $loyalty->vendor_id,
                     'business_name' => $loyalty->vendor->business_name,
-                    'logo_path' => $loyalty->vendor->logo_path,
+                    'logo_url' => $loyalty->vendor->logo_path ? Storage::disk('spaces')->url($loyalty->vendor->logo_path) : null,
                     'category' => $loyalty->vendor->category,
                     'points_balance' => $loyalty->points_balance,
                     'stamps_count' => $loyalty->stamps_count,

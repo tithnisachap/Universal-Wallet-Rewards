@@ -65,9 +65,9 @@ export default function Branches() {
                         {filtered.map((branch) => (
                             <Link key={branch.id} to={`/vendor/branches/${branch.id}`} className="block">
                                 <Card className="flex items-center gap-3">
-                                    {branch.photo_path ? (
+                                    {branch.photo_url ? (
                                         <img
-                                            src={`/storage/${branch.photo_path}`}
+                                            src={branch.photo_url}
                                             alt={branch.name}
                                             className="h-14 w-14 shrink-0 rounded-xl object-cover"
                                         />

@@ -135,9 +135,9 @@ export default function Location() {
                         {branches?.map((branch) => (
                             <Link key={branch.id} to={`/customer/vendors/${branch.vendor_id}/branches`} className="block">
                                 <Card className="flex items-center gap-3">
-                                    {branch.photo_path ? (
+                                    {branch.photo_url ? (
                                         <img
-                                            src={`/storage/${branch.photo_path}`}
+                                            src={branch.photo_url}
                                             alt={branch.vendor_name}
                                             className="h-12 w-12 shrink-0 rounded-xl object-cover"
                                         />

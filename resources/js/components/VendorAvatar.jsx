@@ -10,10 +10,10 @@ const SIZES = {
 export default function VendorAvatar({ vendor, size = 'md', className }) {
     const sizeClass = SIZES[size] ?? SIZES.md;
 
-    if (vendor?.logo_path) {
+    if (vendor?.logo_url) {
         return (
             <img
-                src={`/storage/${vendor.logo_path}`}
+                src={vendor.logo_url}
                 alt={vendor.business_name}
                 className={cn('shrink-0 rounded-full object-cover', sizeClass, className)}
             />

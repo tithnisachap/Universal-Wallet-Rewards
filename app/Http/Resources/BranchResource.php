@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class BranchResource extends JsonResource
 {
@@ -21,7 +22,7 @@ class BranchResource extends JsonResource
             'name' => $this->name,
             'address' => $this->address,
             'phone' => $this->phone,
-            'photo_path' => $this->photo_path,
+            'photo_url' => $this->photo_path ? Storage::disk('spaces')->url($this->photo_path) : null,
             'opening_hours' => $this->opening_hours,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,

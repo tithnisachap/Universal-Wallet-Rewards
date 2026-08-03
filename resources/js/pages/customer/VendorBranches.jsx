@@ -43,9 +43,9 @@ export default function VendorBranches() {
                         {vendorBranches?.map((branch) => (
                             <Link key={branch.id} to={`/customer/vendors/${vendorId}/branches/${branch.id}`} className="block">
                                 <Card className="flex items-center gap-3">
-                                    {branch.photo_path ? (
+                                    {branch.photo_url ? (
                                         <img
-                                            src={`/storage/${branch.photo_path}`}
+                                            src={branch.photo_url}
                                             alt={branch.name}
                                             className="h-16 w-16 shrink-0 rounded-xl object-cover"
                                         />

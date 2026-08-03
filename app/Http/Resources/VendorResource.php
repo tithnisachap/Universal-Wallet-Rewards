@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\PlatformSetting;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class VendorResource extends JsonResource
 {
@@ -22,7 +23,7 @@ class VendorResource extends JsonResource
             'id' => $this->id,
             'business_name' => $this->business_name,
             'category' => $this->category,
-            'logo_path' => $this->logo_path,
+            'logo_url' => $this->logo_path ? Storage::disk('spaces')->url($this->logo_path) : null,
             'phone' => $this->phone,
             'email' => $this->email,
             'address' => $this->address,

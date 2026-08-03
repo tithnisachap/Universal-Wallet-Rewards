@@ -43,7 +43,7 @@ class BranchController extends Controller
             }
 
             $photoPath = $request->hasFile('photo')
-                ? $request->file('photo')->store('branch-photos', 'public')
+                ? $request->file('photo')->store('branch-photos', 'spaces')
                 : null;
 
             return $vendor->branches()->create([
@@ -80,7 +80,7 @@ class BranchController extends Controller
             }
 
             if ($request->hasFile('photo')) {
-                $branch->photo_path = $request->file('photo')->store('branch-photos', 'public');
+                $branch->photo_path = $request->file('photo')->store('branch-photos', 'spaces');
             }
 
             $branch->fill($request->safe()->except('photo'));

@@ -58,9 +58,9 @@ export default function BranchDetail() {
                 <QueryState isLoading={isLoading} isError={isError} error={error} onRetry={refetch}>
                     {branch ? (
                         <>
-                            {branch.photo_path ? (
+                            {branch.photo_url ? (
                                 <img
-                                    src={`/storage/${branch.photo_path}`}
+                                    src={branch.photo_url}
                                     alt={branch.name}
                                     className="h-40 w-full rounded-2xl object-cover"
                                 />
