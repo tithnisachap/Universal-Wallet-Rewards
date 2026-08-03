@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { QrCode, Megaphone, MapPin, BarChart3, History, ChevronDown } from 'lucide-react';
-import Avatar from '../../components/ui/Avatar';
 import Button from '../../components/ui/Button';
 import QueryState from '../../components/ui/QueryState';
 import { useVendorBranches, useVendorDashboard, useVendorProfile } from '../../queries/vendor';
@@ -40,14 +39,7 @@ export default function Dashboard({ basePath = '/vendor' }) {
 
     return (
         <div>
-            <div className="flex items-center justify-between px-4 py-4">
-                <p className="text-lg font-bold text-brand-600">Universal Wallet</p>
-                <Link to={isStaff ? '/staff/profile' : '/vendor/profile'}>
-                    <Avatar size={36} />
-                </Link>
-            </div>
-
-            <div className="mx-4 rounded-2xl bg-brand-600 p-5 text-white">
+            <div className="mx-4 mt-4 rounded-2xl bg-brand-600 p-5 text-white">
                 <div className="mb-4 flex items-center justify-between">
                     <p className="font-bold">Today's Overview</p>
                     {isStaff ? (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Percent, Megaphone, Tag, Star } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
@@ -31,6 +31,7 @@ function matchesFilter(promo, filter) {
 
 export default function Promotions({ basePath = '/vendor' }) {
     const isStaff = basePath === '/staff';
+    const navigate = useNavigate();
     const [filter, setFilter] = useState('all');
     const { data: vendor } = useVendorProfile();
     const { data: promotions, isLoading, isError, error, refetch } = useVendorPromotions();
@@ -40,6 +41,7 @@ export default function Promotions({ basePath = '/vendor' }) {
         <div>
             <PageHeader
                 title="Promotion"
+                onBack={() => navigate(`${basePath}/dashboard`)}
                 right={
                     isStaff ? null : (
                         <Button as={Link} to="/vendor/promotions/create" size="sm" icon={Plus} className="w-auto">
@@ -111,7 +113,7 @@ export default function Promotions({ basePath = '/vendor' }) {
                             return isStaff ? (
                                 <div key={promo.id}>{content}</div>
                             ) : (
-                                <Link key={promo.id} to={`/vendor/promotions/${promo.id}/edit`} className="block">
+                                <Link key={promo.id} to={`/vendor/promotions/${promo.id}/edit`} replace className="block">
                                     {content}
                                 </Link>
                             );

@@ -39,8 +39,7 @@ export default function Coupons() {
 
     return (
         <div className="px-4 pb-6 pt-6">
-            <p className="text-lg font-bold text-brand-600">Universal Wallet</p>
-            <h1 className="mt-4 text-2xl font-bold text-gray-900">Coupons</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Coupons</h1>
             <p className="mt-1 text-sm text-gray-500">Explore stores and earn rewards!</p>
 
             <SearchInput
