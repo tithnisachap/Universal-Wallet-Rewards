@@ -22,6 +22,7 @@ class CustomerResource extends JsonResource
             'email' => $this->whenLoaded('user', fn () => $this->user->email),
             'avatar' => $this->whenLoaded('user', fn () => $this->user->avatar),
             'member_since' => $this->created_at,
+            'is_suspended' => ! is_null($this->suspended_at),
             // Admin customer-detail view only: every vendor this customer
             // has an existing loyalty account with (not a full directory).
             'vendors' => $this->when(

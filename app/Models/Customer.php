@@ -17,6 +17,10 @@ class Customer extends Model
         'customer_code',
     ];
 
+    protected $casts = [
+        'suspended_at' => 'datetime',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

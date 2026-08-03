@@ -116,6 +116,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/customers', [AdminCustomerController::class, 'index']);
         Route::get('/customers/{customer}', [AdminCustomerController::class, 'show']);
+        Route::post('/customers/{customer}/suspend', [AdminCustomerController::class, 'suspend']);
+        Route::post('/customers/{customer}/reinstate', [AdminCustomerController::class, 'reinstate']);
 
         Route::get('/analytics', [AdminAnalyticsController::class, 'show']);
 

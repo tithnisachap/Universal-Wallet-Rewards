@@ -1,27 +1,38 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Star, Tag, Store } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Avatar from '../../components/ui/Avatar';
+import Badge from '../../components/ui/Badge';
+import Button from '../../components/ui/Button';
 import VendorAvatar from '../../components/VendorAvatar';
 import QueryState from '../../components/ui/QueryState';
 import EmptyState from '../../components/ui/EmptyState';
-import { useAdminCustomer } from '../../queries/admin';
+import { useAdminCustomer, useSuspendCustomer, useReinstateCustomer } from '../../queries/admin';
 
 export default function CustomerDetail() {
     const { customerId } = useParams();
+    const navigate = useNavigate();
     const { data: customer, isLoading, isError, error, refetch } = useAdminCustomer(customerId);
+    const suspend = useSuspendCustomer(customerId);
+    const reinstate = useReinstateCustomer(customerId);
+
+    const isSuspended = customer?.is_suspended;
+
+    function handleToggle() {
+        (isSuspended ? reinstate : suspend).mutate();
+    }
 
     return (
         <div>
-            <PageHeader title="Customer" />
+            <PageHeader title="Customer" onBack={() => navigate('/admin/customers')} />
             <QueryState isLoading={isLoading} isError={isError} error={error} onRetry={refetch}>
                 {customer ? (
                     <div className="space-y-4 px-4 py-4">
                         <Card>
                             <div className="flex items-center gap-3">
                                 <Avatar src={customer.avatar} size={56} />
-                                <div>
+                                <div className="min-w-0 flex-1">
                                     <p className="text-lg font-bold text-gray-900">{customer.name}</p>
                                     <p className="text-sm text-gray-500">{customer.email}</p>
                                 </div>
@@ -42,8 +53,34 @@ export default function CustomerDetail() {
                                         })}
                                     </dd>
                                 </div>
+                                <div className="flex items-center justify-between py-3">
+                                    <dt className="text-sm text-gray-500">Status</dt>
+                                    <dd>
+                                        <Badge tone={isSuspended ? 'rejected' : 'approved'}>
+                                            {isSuspended ? 'Suspended' : 'Active'}
+                                        </Badge>
+                                    </dd>
+                                </div>
                             </dl>
                         </Card>
+
+                        {(suspend.isError || reinstate.isError) ? (
+                            <p className="text-sm text-danger-500">
+                                {(suspend.error ?? reinstate.error)?.message}
+                            </p>
+                        ) : null}
+
+                        <Button
+                            variant={isSuspended ? 'outline' : 'dangerOutline'}
+                            onClick={handleToggle}
+                            disabled={suspend.isPending || reinstate.isPending}
+                        >
+                            {suspend.isPending || reinstate.isPending
+                                ? 'Saving...'
+                                : isSuspended
+                                  ? 'Reinstate Customer'
+                                  : 'Suspend Customer'}
+                        </Button>
 
                         <div>
                             <p className="mb-2 font-bold text-gray-900">Loyalty at</p>

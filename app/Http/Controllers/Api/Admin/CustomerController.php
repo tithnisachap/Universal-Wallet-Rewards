@@ -45,4 +45,22 @@ class CustomerController extends Controller
 
         return new CustomerResource($customer);
     }
+
+    public function suspend(Customer $customer)
+    {
+        abort_if($customer->suspended_at !== null, 422, 'Customer is already suspended.');
+
+        $customer->update(['suspended_at' => now()]);
+
+        return new CustomerResource($customer->load('user'));
+    }
+
+    public function reinstate(Customer $customer)
+    {
+        abort_if($customer->suspended_at === null, 422, 'Customer is not suspended.');
+
+        $customer->update(['suspended_at' => null]);
+
+        return new CustomerResource($customer->load('user'));
+    }
 }
