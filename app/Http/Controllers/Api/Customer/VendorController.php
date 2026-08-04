@@ -20,6 +20,16 @@ class VendorController extends Controller
             ->where('status', 'approved')
             ->when($request->filled('search'), fn ($query) => $query->where('business_name', 'ilike', '%'.$request->string('search').'%'))
             ->withCount('branches')
+            ->when($customer, function ($query) use ($customer) {
+                $query->orderByRaw('
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM customer_loyalties
+                        WHERE customer_loyalties.vendor_id = vendors.id
+                        AND customer_loyalties.customer_id = ?
+                        AND (customer_loyalties.stamps_count > 0 OR customer_loyalties.points_balance > 0)
+                    ) THEN 0 ELSE 1 END
+                ', [$customer->id]);
+            })
             ->orderBy('business_name')
             ->paginate($request->integer('per_page', 20));
 

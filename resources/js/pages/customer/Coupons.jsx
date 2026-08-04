@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Star, Tag, Store } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SearchInput from '../../components/ui/SearchInput';
@@ -27,16 +27,6 @@ export default function Coupons() {
     const vendors = data?.data;
     const meta = data?.meta;
 
-    const sortedVendors = useMemo(() => {
-        if (!vendors) return vendors;
-
-        function hasBalance(vendor) {
-            return (vendor.loyalty?.stamps_count ?? 0) > 0 || (vendor.loyalty?.points_balance ?? 0) > 0;
-        }
-
-        return [...vendors].sort((a, b) => Number(hasBalance(b)) - Number(hasBalance(a)));
-    }, [vendors]);
-
     return (
         <div className="px-4 pb-6 pt-6">
             <h1 className="text-2xl font-bold text-gray-900">Coupons</h1>
@@ -64,7 +54,7 @@ export default function Coupons() {
                         />
                     }
                 >
-                    {sortedVendors?.map((vendor) => (
+                    {vendors?.map((vendor) => (
                         <Link key={vendor.id} to={`/customer/vendors/${vendor.id}/branches`} className="block">
                             <Card className="flex items-center gap-3">
                                 <VendorAvatar vendor={vendor} size="lg" />
