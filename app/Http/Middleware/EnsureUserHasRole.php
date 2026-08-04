@@ -13,8 +13,17 @@ class EnsureUserHasRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (! $request->user() || ! in_array($request->user()->role, $roles, true)) {
+        $user = $request->user();
+
+        if (! $user || ! in_array($user->role, $roles, true)) {
             abort(403, 'This action requires a '.implode(' or ', $roles).' account.');
+        }
+
+        if ($user->role === 'customer' && in_array('customer', $roles, true)) {
+            $user->loadMissing('customer');
+            if ($user->customer?->suspended_at !== null) {
+                abort(403, 'Your account has been suspended. Please contact support.');
+            }
         }
 
         return $next($request);
