@@ -23,10 +23,10 @@ class VendorController extends Controller
             ->when($customer, function ($query) use ($customer) {
                 $query->orderByRaw('
                     CASE WHEN EXISTS (
-                        SELECT 1 FROM customer_loyalties
-                        WHERE customer_loyalties.vendor_id = vendors.id
-                        AND customer_loyalties.customer_id = ?
-                        AND (customer_loyalties.stamps_count > 0 OR customer_loyalties.points_balance > 0)
+                        SELECT 1 FROM customer_loyalty
+                        WHERE customer_loyalty.vendor_id = vendors.id
+                        AND customer_loyalty.customer_id = ?
+                        AND (customer_loyalty.stamps_count > 0 OR customer_loyalty.points_balance > 0)
                     ) THEN 0 ELSE 1 END
                 ', [$customer->id]);
             })
