@@ -13,13 +13,13 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         User::factory()->admin()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@universalwallet.test',
+            'name' => 'admin1',
+            'email' => 'neolimti@gmail.com',
         ]);
 
         User::factory()->admin()->create([
-            'name' => 'Sophana Phat',
-            'email' => 'sophana@universalwallet.test',
+            'name' => 'admin2',
+            'email' => 'vitou.raksmey.154433421@acestudent.org',
         ]);
     }
 }
