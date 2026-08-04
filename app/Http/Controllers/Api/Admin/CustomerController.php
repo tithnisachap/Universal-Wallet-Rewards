@@ -50,7 +50,8 @@ class CustomerController extends Controller
     {
         abort_if($customer->suspended_at !== null, 422, 'Customer is already suspended.');
 
-        $customer->update(['suspended_at' => now()]);
+        $customer->suspended_at = now();
+        $customer->save();
 
         return new CustomerResource($customer->load('user'));
     }
@@ -59,7 +60,8 @@ class CustomerController extends Controller
     {
         abort_if($customer->suspended_at === null, 422, 'Customer is not suspended.');
 
-        $customer->update(['suspended_at' => null]);
+        $customer->suspended_at = null;
+        $customer->save();
 
         return new CustomerResource($customer->load('user'));
     }
